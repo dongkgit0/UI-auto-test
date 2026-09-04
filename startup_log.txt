@@ -1,0 +1,10 @@
+﻿D:\python.exe : Traceback (most recent call last):
+At line:1 char:11265
++ ... _platform"; D:\python.exe backend\main.py *> C:\Users\sam\Desktop\ui_ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\sam\Desktop\ui_test_platform\backend\main.py", line 25, in <module>
+    from fastapi import FastAPI
+ModuleNotFoundError: No module named 'fastapi'

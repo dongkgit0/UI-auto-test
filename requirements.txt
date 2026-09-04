@@ -1,0 +1,10 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+sqlalchemy==2.0.35
+pandas==2.2.3
+openpyxl==3.1.5
+python-multipart==0.0.12
+requests==2.32.3
+pydantic==2.9.2
+playwright==1.49.0
+reportlab==4.2.2

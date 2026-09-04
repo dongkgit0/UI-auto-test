@@ -1,0 +1,3536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UI 自动化测试平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6f8;
+  --surface:#ffffff;
+  --surface-2:#eef1f4;
+  --border:#d6dde3;
+  --text:#1f2a33;
+  --text-dim:#5a6873;
+  --text-faint:#8a97a0;
+  --accent:#2aa39c;
+  --accent-dim:#dceeed;
+  --pass:#2e9e5b;
+  --fail:#d9483d;
+  --running:#c98a1e;
+  --pending:#6b7680;
+  --radius-panel:10px;
+  --radius-control:6px;
+}
+/* ---------- 深色模式 ---------- */
+html[data-theme="dark"]{
+  --bg:#0f172a;
+  --surface:#1e293b;
+  --surface-2:#283548;
+  --border:#3b4a5c;
+  --text:#e2e8f0;
+  --text-dim:#94a3b8;
+  --text-faint:#64748b;
+  --accent:#2dd4bf;
+  --accent-dim:#134e4a;
+  --pass:#34d399;
+  --fail:#f87171;
+  --running:#fbbf24;
+  --pending:#94a3b8;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:14px;
+  font-weight:500;
+  line-height:1.55;
+  letter-spacing:0.01em;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+  font-feature-settings:"kern" 1,"liga" 1,"calt" 1;
+}
+::selection{background:rgba(42,163,156,0.25);color:var(--text);}
+code, .mono, input, select, textarea{
+  font-family:'IBM Plex Mono','Consolas','Monaco',monospace;
+  font-weight:500;
+}
+.app{display:flex;min-height:100vh;}
+
+/* ---------- Login Page ---------- */
+.login-page{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#e8f4f3 0%,#f4f6f8 50%,#eef1f4 100%);
+}
+.login-card{
+  width:380px;background:var(--surface);border-radius:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.06);
+  padding:36px 32px 28px 32px;
+}
+.login-brand{
+  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.login-brand-dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
+.login-brand-name{font-size:18px;font-weight:700;letter-spacing:0.3px;}
+.login-brand-sub{color:var(--text-faint);font-size:12.5px;margin-bottom:24px;padding-left:21px;}
+.login-field{margin-bottom:16px;}
+.login-field label{display:block;font-size:13px;font-weight:500;color:var(--text-dim);margin-bottom:6px;}
+.login-field input{
+  width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-control);
+  font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s;
+}
+.login-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(42,163,156,0.15);}
+.login-btn{
+  width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-control);
+  font-size:14.5px;font-weight:600;cursor:pointer;transition:background 0.15s,transform 0.1s;margin-top:6px;
+}
+.login-btn:hover{background:#23908a;}
+.login-btn:active{transform:scale(0.98);}
+.login-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.login-error{
+  color:var(--fail);font-size:13px;margin-top:12px;min-height:18px;text-align:center;
+}
+.login-footer{
+  margin-top:20px;padding-top:16px;border-top:1px solid var(--border);
+  text-align:center;color:var(--text-faint);font-size:12px;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  width:220px;
+  flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  padding:22px 14px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+}
+.brand{
+  padding:0 8px 22px 8px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:16px;
+}
+.brand-mark{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:0.2px;
+}
+.brand-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.brand-sub{color:var(--text-faint);font-size:12px;margin-top:4px;padding-left:17px;}
+
+.nav{display:flex;flex-direction:column;gap:2px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:var(--radius-control);
+  color:var(--text-dim);cursor:pointer;font-size:13.5px;font-weight:500;
+  border:1px solid transparent;
+}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:0.85;}
+.nav-item:hover{background:var(--surface-2);color:var(--text);}
+.nav-item.active{background:var(--accent-dim);color:var(--accent);border-color:#b8ddd9;}
+
+.sidebar-foot{margin-top:auto;padding:10px 8px 0 8px;border-top:1px solid var(--border);}
+.running-badge{
+  display:flex;align-items:center;gap:8px;color:var(--text-dim);font-size:12.5px;padding-top:12px;
+}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--running);animation:pulse 1.4s infinite;}
+@keyframes pulse{0%{opacity:1;}50%{opacity:.3;}100%{opacity:1;}}
+
+/* ---------- Main ---------- */
+.main{flex:1;min-width:0;padding:24px 32px;max-width:1600px;}
+.view{display:none;}
+.view.active{display:block;}
+
+.view-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;gap:20px;flex-wrap:wrap;}
+.view-title{font-size:21px;font-weight:600;margin:0 0 4px 0;}
+.view-desc{color:var(--text-dim);font-size:13px;max-width:520px;}
+
+/* ---------- Buttons ---------- */
+.btn{
+  appearance:none;border:1px solid var(--border);background:var(--surface-2);
+  color:var(--text);padding:8px 14px;border-radius:var(--radius-control);
+  font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.btn:hover{border-color:#b0bbc2;}
+.btn-primary{background:var(--accent);color:#ffffff;border-color:var(--accent);font-weight:600;}
+.btn-primary:hover{background:#24908a;}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-ghost{background:transparent;}
+.btn-danger{color:var(--fail);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+
+/* ---------- Panel / cards ---------- */
+.panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-panel);
+  padding:20px;
+  margin-bottom:20px;
+}
+.panel-title{font-size:13px;font-weight:600;color:var(--text-dim);margin:0 0 16px 0;}
+
+.field-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;}
+.field label{font-size:11.5px;color:var(--text-dim);font-weight:500;}
+/* 执行任务页顶部配置标签：加深字体，简洁醒目 */
+#view-execute .field-row .field label{
+  font-size:12px;
+  color:#374151;
+  font-weight:600;
+  letter-spacing:0.01em;
+}
+.field input, .field select{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-control);
+  color:var(--text);padding:7px 10px;font-size:13px;font-weight:400;width:100%;
+}
+.field select option{font-size:13px;font-weight:400;padding:6px 10px;}
+.field input:focus, .field select:focus{outline:none;border-color:var(--accent);}
+
+/* ---------- 执行模式高级分段控制器 ---------- */
+.mode-segmented{
+  display:inline-flex;
+  align-items:center;
+  width:100%;
+  background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border:1px solid #e2e8f0;
+  border-radius:8px;
+  padding:3px;
+  gap:2px;
+  height:32px;
+  overflow:hidden;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.04);
+  box-sizing:border-box;
+}
+.mode-segmented label{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  flex:1;
+  padding:0 8px;
+  font-size:12.5px;
+  font-weight:500;
+  color:#94a3b8;
+  cursor:pointer;
+  transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space:nowrap;
+  user-select:none;
+  position:relative;
+  background:transparent;
+  border-radius:6px;
+  height:24px;
+  min-width:0;
+}
+.mode-segmented label .mode-icon{
+  width:14px;
+  height:14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0.7;
+  transition:opacity 0.2s ease;
+}
+.mode-segmented label:hover{
+  color:#64748b;
+  background:rgba(255,255,255,0.7);
+}
+.mode-segmented label:hover .mode-icon{
+  opacity:1;
+}
+.mode-segmented input[type="radio"]{
+  display:none;
+}
+.mode-segmented label:has(input[type="radio"]:checked){
+  background:#fff;
+  color:var(--accent);
+  font-weight:600;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+.mode-segmented label:has(input[type="radio"]:checked) .mode-icon{
+  opacity:1;
+  color:var(--accent);
+}
+.mode-segmented label:has(input[type="radio"]:checked):hover{
+  background:#fff;
+  color:var(--accent);
+}
+.mode-segmented label:has(input[type="radio"]:checked)::after{
+  content:'';
+  position:absolute;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:20px;
+  height:2px;
+  background:var(--accent);
+  border-radius:1px;
+}
+.mode-help-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:14px;
+  height:14px;
+  margin-left:4px;
+  border-radius:50%;
+  background:#e5e7eb;
+  color:#6b7280;
+  font-size:10px;
+  font-weight:600;
+  cursor:help;
+  position:relative;
+}
+.mode-help-icon:hover{
+  background:#d1d5db;
+  color:#374151;
+}
+.mode-help-icon::after{
+  content:attr(data-tooltip);
+  position:absolute;
+  bottom:calc(100% + 6px);
+  left:50%;
+  transform:translateX(-50%);
+  background:#1f2937;
+  color:#fff;
+  padding:5px 10px;
+  border-radius:4px;
+  font-size:11.5px;
+  font-weight:400;
+  white-space:nowrap;
+  opacity:0;
+  visibility:hidden;
+  transition:all 0.15s ease;
+  z-index:100;
+  pointer-events:none;
+}
+.mode-help-icon:hover::after{
+  opacity:1;
+  visibility:visible;
+}
+
+/* ---------- Table ---------- */
+table{width:100%;border-collapse:collapse;}
+th{
+  text-align:left;font-size:12px;color:var(--text-dim);font-weight:600;
+  padding:0 10px 10px 10px;border-bottom:1px solid var(--border);
+  letter-spacing:0.02em;
+}
+td{padding:12px 10px;border-bottom:1px solid var(--border);font-size:13.5px;font-weight:500;vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+.row-hover:hover{background:var(--surface-2);cursor:pointer;}
+.dim{color:var(--text-dim);}
+.faint{color:var(--text-faint);font-size:12px;}
+
+/* ---------- 现代表格（测试环境页） ---------- */
+.modern-table-wrap{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  overflow:hidden;
+}
+.modern-table{width:100%;border-collapse:separate;border-spacing:0;}
+.modern-table thead th{
+  background:#f1f3f5;
+  color:#374151;
+  font-size:12px;
+  font-weight:600;
+  text-align:left;
+  padding:11px 16px;
+  border-bottom:1px solid var(--border);
+  letter-spacing:0.02em;
+}
+.modern-table tbody td{
+  padding:14px 16px;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--text);
+  border-bottom:1px solid var(--surface-2);
+  vertical-align:middle;
+}
+.modern-table tbody tr:last-child td{border-bottom:none;}
+.modern-table tbody tr{transition:background 0.15s ease;}
+.modern-table tbody tr:hover{background:rgba(42,163,156,0.04);}
+.modern-table .env-name{
+  font-weight:600;
+  color:var(--text);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.modern-table .env-name:hover{color:var(--accent);}
+.modern-table .env-name .env-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--pass);
+  box-shadow:0 0 0 3px rgba(46,158,91,0.15);
+}
+.modern-table .env-url{
+  font-family:'IBM Plex Mono','Consolas',monospace;
+  font-size:12.5px;
+  color:var(--accent);
+  text-decoration:none;
+  cursor:pointer;
+  padding:3px 8px;
+  background:rgba(42,163,156,0.06);
+  border-radius:5px;
+  display:inline-block;
+  max-width:320px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  vertical-align:middle;
+}
+.modern-table .env-url:hover{
+  background:rgba(42,163,156,0.12);
+  text-decoration:underline;
+}
+.modern-table .env-remark{
+  color:var(--text-dim);
+  font-size:13px;
+  max-width:240px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  display:inline-block;
+  vertical-align:middle;
+}
+.modern-table .action-cell{
+  text-align:right;
+  white-space:nowrap;
+}
+.modern-table .icon-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:32px;height:32px;
+  border-radius:7px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--text-dim);
+  cursor:pointer;
+  transition:all 0.15s;
+  margin-left:4px;
+}
+.modern-table .icon-btn:hover{
+  background:var(--surface-2);
+  color:var(--text);
+}
+.modern-table .icon-btn.edit-btn:hover{
+  background:rgba(42,163,156,0.1);
+  color:var(--accent);
+  border-color:rgba(42,163,156,0.2);
+}
+.modern-table .icon-btn.delete-btn:hover{
+  background:rgba(217,72,61,0.1);
+  color:var(--fail);
+  border-color:rgba(217,72,61,0.2);
+}
+.modern-table .icon-btn svg{width:15px;height:15px;}
+
+/* 表格区块标题 */
+.panel-section-title{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:13px 16px;border-bottom:1px solid var(--border);
+  font-size:13px;font-weight:600;color:#374151;
+}
+
+/* 测试用例表格专用 */
+.module-tag{
+  display:inline-block;padding:3px 10px;border-radius:999px;
+  background:rgba(42,163,156,0.08);color:var(--accent);
+  font-size:12px;font-weight:500;
+}
+.step-count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:28px;height:24px;padding:0 8px;border-radius:6px;
+  background:var(--surface-2);color:var(--text-dim);
+  font-size:12.5px;font-weight:600;font-family:'IBM Plex Mono',monospace;
+}
+
+/* ---------- 测试用例模块分组 ---------- */
+.case-toolbar{
+  display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;
+}
+.case-search-box{
+  position:relative;flex:1;min-width:240px;max-width:400px;
+}
+.case-search-box .search-icon{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;color:var(--text-dim);pointer-events:none;
+}
+.case-search-box input{
+  width:100%;padding:9px 12px 9px 34px;
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-size:13.5px;font-weight:500;
+  transition:border-color 0.15s;
+}
+.case-search-box input:focus{outline:none;border-color:var(--accent);}
+.case-filter-select{flex-shrink:0;}
+.case-toolbar-actions{display:flex;gap:8px;margin-left:auto;}
+.btn-sm{padding:7px 14px;font-size:12.5px;}
+
+.case-groups-container{display:flex;flex-direction:column;gap:12px;}
+.case-group{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;transition:box-shadow 0.15s;
+}
+.case-group:hover{box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+.case-group-header{
+  display:flex;align-items:center;gap:12px;padding:14px 18px;
+  cursor:pointer;user-select:none;transition:background 0.15s;
+}
+.case-group-header:hover{background:var(--surface-2);}
+.case-group-arrow{
+  width:20px;height:20px;color:var(--text-dim);
+  transition:transform 0.2s ease;flex-shrink:0;
+}
+.case-group.expanded .case-group-arrow{transform:rotate(90deg);}
+.case-group-body{
+  display:none;border-top:1px solid var(--border);
+}
+.case-group.expanded .case-group-body{display:block;}
+.case-item{
+  display:flex;align-items:center;gap:12px;padding:11px 18px 11px 50px;
+  border-bottom:1px solid var(--border);transition:background 0.15s;
+  position:relative;
+}
+.case-item:last-child{border-bottom:none;}
+.case-item:hover{background:var(--surface-2);}
+.case-item-name{
+  font-size:13.5px;font-weight:500;color:var(--text);
+  cursor:pointer;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.case-item-name:hover{color:var(--accent);}
+.case-item-actions{
+  display:flex;gap:4px;flex-shrink:0;
+  position:relative;z-index:2;
+}
+.case-item-actions .icon-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:6px;
+  border:1px solid transparent;background:transparent;
+  color:var(--text-dim);cursor:pointer;
+  transition:all 0.15s ease;
+}
+.case-item-actions .icon-btn svg{width:15px;height:15px;}
+.case-item-actions .icon-btn:hover{
+  background:var(--surface-2);color:var(--text);
+}
+.case-item-actions .icon-btn.edit-btn:hover{
+  background:rgba(42,163,156,0.1);color:var(--accent);
+  border-color:rgba(42,163,156,0.2);
+}
+.case-item-actions .icon-btn.delete-btn:hover{
+  background:rgba(217,72,61,0.1);color:var(--fail);
+  border-color:rgba(217,72,61,0.2);
+}
+
+/* 模块标题层级 */
+.case-group-name{
+  font-size:14px;font-weight:600;color:var(--text);flex:1;
+  display:flex;align-items:center;gap:6px;
+}
+.module-parent{color:var(--text);font-weight:600;}
+.module-sep{color:var(--text-faint);font-weight:400;}
+.module-child{color:var(--text-dim);font-weight:500;}
+.module-single{color:var(--text);font-weight:600;}
+.case-group-count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:20px;padding:0 7px;border-radius:999px;
+  background:var(--surface-2);color:var(--text-dim);
+  font-size:11.5px;font-weight:600;flex-shrink:0;
+}
+
+/* ---------- Status pill ---------- */
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;
+  font-size:11.5px;font-weight:600;border:1px solid transparent;
+  white-space:nowrap;flex-shrink:0;
+}
+.pill .dot{width:6px;height:6px;border-radius:50%;}
+.pill-online, .pill-passed{background:rgba(46,158,91,0.12);color:var(--pass);}
+.pill-online .dot, .pill-passed .dot{background:var(--pass);}
+.pill-offline, .pill-failed, .pill-error{background:rgba(217,72,61,0.12);color:var(--fail);}
+.pill-offline .dot, .pill-failed .dot, .pill-error .dot{background:var(--fail);}
+.pill-unknown, .pill-pending{background:rgba(107,118,128,0.15);color:var(--text-dim);}
+.pill-unknown .dot, .pill-pending .dot{background:var(--pending);}
+.pill-running{background:rgba(201,138,30,0.13);color:var(--running);}
+.pill-running .dot{background:var(--running);animation:pulse 1.2s infinite;}
+.pill-skipped{background:rgba(107,118,128,0.1);color:var(--text-faint);}
+.pill-skipped .dot{background:var(--text-faint);}
+
+/* ---------- Empty state ---------- */
+.empty{
+  text-align:center;padding:40px 20px;color:var(--text-dim);
+}
+.empty-title{font-weight:600;color:var(--text);margin-bottom:6px;font-size:14px;}
+.empty p{font-size:13px;max-width:360px;margin:0 auto;}
+
+/* ---------- Import dropzone ---------- */
+.dropzone{
+  display:block;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  border-radius:10px;
+  padding:16px 20px;
+  text-align:center;cursor:pointer;color:var(--text-dim);
+  margin-bottom:20px;
+  transition:all 0.15s ease;
+  font-size:13px;
+}
+.dropzone:hover{border-color:var(--accent);color:var(--text);background:var(--surface);}
+.dropzone input{display:none;}
+
+/* ---------- Steps timeline (report detail) ---------- */
+.timeline{position:relative;padding-left:26px;}
+.timeline::before{
+  content:'';position:absolute;left:8px;top:6px;bottom:6px;width:1px;background:var(--border);
+}
+.tl-step{position:relative;padding-bottom:18px;}
+.tl-step:last-child{padding-bottom:0;}
+.tl-dot{
+  position:absolute;left:-26px;top:2px;width:17px;height:17px;border-radius:50%;
+  background:var(--surface-2);border:2px solid var(--pending);
+  display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--text-dim);
+}
+.tl-dot.passed{border-color:var(--pass);background:var(--pass);color:#fff;}
+.tl-dot.failed{border-color:var(--fail);background:var(--fail);color:#fff;}
+.tl-dot.skipped{border-color:var(--text-faint);background:var(--surface-2);}
+.tl-head{display:flex;align-items:center;gap:10px;margin-bottom:3px;}
+.tl-action{font-weight:600;font-size:13px;}
+.tl-order{color:var(--text-faint);font-size:12px;}
+.tl-body{color:var(--text-dim);font-size:12.5px;}
+.tl-body .mono{color:var(--text);}
+.tl-shot{margin-top:8px;}
+.tl-shot img{max-width:220px;border:1px solid var(--border);border-radius:6px;display:block;}
+
+/* ---------- Steps table (case detail) ---------- */
+.steps-table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  border:1px solid var(--border);border-radius:10px;overflow:hidden;
+  table-layout:fixed;
+}
+.steps-table thead th{
+  background:#f1f3f5;color:#374151;font-size:11.5px;font-weight:600;
+  text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);
+  letter-spacing:0.02em;
+}
+.steps-table thead th:nth-child(1){width:44px;text-align:center;}
+.steps-table thead th:nth-child(2){width:72px;}
+.steps-table thead th:nth-child(3){width:130px;}
+.steps-table tbody td{
+  padding:12px;font-size:13px;color:var(--text);
+  border-bottom:1px solid var(--surface-2);vertical-align:top;
+  word-break:break-word;line-height:1.5;
+}
+.steps-table tbody tr:last-child td{border-bottom:none;}
+.steps-table tbody tr{transition:background 0.15s;}
+.steps-table tbody tr:hover{background:rgba(42,163,156,0.03);}
+.steps-table tbody td:nth-child(1){text-align:center;}
+.step-badge{
+  display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+  border-radius:6px;background:rgba(42,163,156,0.08);border:1px solid rgba(42,163,156,0.15);
+  font-size:12px;color:var(--accent);font-weight:600;font-family:'IBM Plex Mono',monospace;
+}
+/* 步骤数字颜色循环（5种颜色，便于区分不同步骤） */
+.steps-table tbody tr:nth-child(5n+1) .step-badge{
+  background:rgba(42,163,156,0.1);border-color:rgba(42,163,156,0.2);color:#2aa39c;
+}
+.steps-table tbody tr:nth-child(5n+2) .step-badge{
+  background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.2);color:#3b82f6;
+}
+.steps-table tbody tr:nth-child(5n+3) .step-badge{
+  background:rgba(249,115,22,0.1);border-color:rgba(249,115,22,0.2);color:#f97316;
+}
+.steps-table tbody tr:nth-child(5n+4) .step-badge{
+  background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.2);color:#8b5cf6;
+}
+.steps-table tbody tr:nth-child(5n+5) .step-badge{
+  background:rgba(236,72,153,0.1);border-color:rgba(236,72,153,0.2);color:#ec4899;
+}
+.action-tag{
+  display:inline-block;background:rgba(42,163,156,0.08);border:1px solid rgba(42,163,156,0.15);
+  padding:3px 10px;border-radius:6px;font-size:12px;color:var(--accent);font-weight:500;
+  white-space:nowrap;
+}
+
+/* ---------- Step cards (case editor) ---------- */
+.step-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;margin-bottom:10px;transition:border-color .15s,box-shadow .15s;
+}
+.step-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.step-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.step-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:13px;font-weight:600;flex-shrink:0;
+  box-shadow:0 1px 3px rgba(42,163,156,0.3);
+}
+.step-card-title{font-size:13px;color:#374151;flex:1;font-weight:600;}
+.step-card-tools{display:flex;gap:4px;flex-shrink:0;}
+.step-icon-btn{
+  width:28px;height:28px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text-dim);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;font-size:13px;
+  transition:all .12s;
+}
+.step-icon-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--surface-2);}
+.step-icon-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
+.step-icon-btn:disabled{opacity:.3;cursor:not-allowed;}
+.step-fields{display:flex;flex-direction:column;gap:8px;}
+.step-field-row{display:flex;gap:10px;}
+.step-field{flex:1;display:flex;flex-direction:column;gap:4px;}
+.step-field label{
+  font-size:12px;color:#374151;font-weight:600;
+  letter-spacing:0.01em;
+}
+.step-field input,.step-field select{
+  padding:7px 10px;border:1px solid var(--border);border-radius:6px;
+  font-size:13px;font-weight:400;background:var(--surface);color:var(--text);outline:none;
+  transition:border-color .12s;
+}
+.step-field input:focus,.step-field select:focus{border-color:var(--accent);}
+.step-field.action-field{flex:0 0 110px;}
+.add-step-btn{
+  width:100%;padding:10px;border:1px dashed var(--border);border-radius:8px;
+  background:transparent;color:var(--text-dim);cursor:pointer;font-size:13px;
+  transition:all .12s;margin-top:4px;
+}
+.add-step-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--surface-2);}
+.edit-section-title{
+  font-size:13px;font-weight:600;color:#1f2937;margin-bottom:10px;
+  padding-bottom:8px;border-bottom:1px solid var(--border);
+}
+
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(6,9,10,0.6);display:none;
+  align-items:flex-start;justify-content:center;padding:60px 20px;z-index:50;
+}
+.modal-overlay.show{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-panel);
+  width:100%;max-width:760px;max-height:82vh;overflow:auto;padding:24px;
+}
+.modal-sm{max-width:420px;}
+.modal-close{
+  position:absolute;top:16px;right:16px;
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:#9ca3af;
+  background:transparent;border:none;
+  transition:background-color 0.15s ease,color 0.15s ease;
+  z-index:10;
+}
+.modal-close:hover{background:#f3f4f6;color:#4b5563;}
+.modal-close:active{background:#e5e7eb;}
+.modal-close svg{width:16px;height:16px;}
+.modal{position:relative;}
+/* 用例弹窗标题 */
+.modal-title{
+  margin:0 0 18px 0;
+  font-size:18px;
+  font-weight:700;
+  color:#1f2937;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.modal-title::before{
+  content:'';
+  width:4px;
+  height:18px;
+  border-radius:2px;
+  background:var(--accent);
+  flex-shrink:0;
+}
+
+/* ---------- 删除确认弹窗 ---------- */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;
+  align-items:center;justify-content:center;z-index:70;
+  backdrop-filter:blur(2px);
+}
+.confirm-overlay.show{display:flex;}
+.confirm-dialog{
+  background:#fff;border-radius:14px;width:100%;max-width:420px;
+  padding:28px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.18),0 4px 12px rgba(0,0,0,0.08);
+  animation:confirmIn 0.2s ease-out;
+}
+@keyframes confirmIn{
+  from{opacity:0;transform:scale(0.95) translateY(-8px);}
+  to{opacity:1;transform:scale(1) translateY(0);}
+}
+.confirm-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.confirm-icon{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  background:rgba(220,38,38,0.1);color:#dc2626;
+  display:flex;align-items:center;justify-content:center;
+}
+.confirm-icon svg{width:22px;height:22px;}
+.confirm-title{font-size:17px;font-weight:700;color:#111827;margin:0;}
+.confirm-body{
+  font-size:14px;color:#4b5563;line-height:1.6;margin:0 0 24px 52px;
+}
+.confirm-body .highlight-name{font-weight:600;color:#111827;}
+.confirm-actions{display:flex;gap:10px;justify-content:flex-end;}
+.confirm-cancel-btn{
+  padding:9px 20px;border-radius:8px;border:1px solid #d1d5db;
+  background:#f9fafb;color:#374151;font-size:13.5px;font-weight:500;
+  cursor:pointer;transition:all 0.15s;
+}
+.confirm-cancel-btn:hover{background:#f3f4f6;border-color:#9ca3af;color:#111827;}
+.confirm-danger-btn{
+  padding:9px 20px;border-radius:8px;border:1px solid #dc2626;
+  background:#dc2626;color:#fff;font-size:13.5px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;
+}
+.confirm-danger-btn:hover{background:#b91c1c;border-color:#b91c1c;box-shadow:0 2px 8px rgba(220,38,38,0.3);}
+.confirm-primary-btn{
+  padding:9px 20px;border-radius:8px;border:1px solid var(--accent);
+  background:var(--accent);color:#fff;font-size:13.5px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;
+}
+.confirm-primary-btn:hover{background:#2a9d96;border-color:#2a9d96;box-shadow:0 2px 8px rgba(42,163,156,0.3);}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--surface-2);border:1px solid var(--border);
+  padding:11px 16px;border-radius:var(--radius-control);font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,0.12);
+  display:none;z-index:60;max-width:360px;
+}
+.toast.show{display:block;}
+.toast.err{border-color:#e8b5b0;color:#c93a30;}
+.toast.ok{border-color:#b5dcc4;color:#2e9e5b;}
+
+/* ---------- 服务器模块 ---------- */
+.pill-checking{background:rgba(201,138,30,0.13);color:var(--running);}
+.pill-checking .dot{background:var(--running);animation:pulse 1.2s infinite;}
+
+.form-section{margin-bottom:20px;}
+.form-section-title{font-size:12.5px;font-weight:600;color:var(--text-dim);margin:0 0 12px 0;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.checkbox-group{display:flex;gap:16px;flex-wrap:wrap;}
+.checkbox-item{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;}
+.checkbox-item input{width:16px;height:16px;cursor:pointer;}
+
+.check-result{margin-top:16px;border:1px solid var(--border);border-radius:var(--radius-control);padding:14px;display:none;}
+.check-result.show{display:block;}
+.check-result-title{font-size:13px;font-weight:600;margin-bottom:10px;}
+.check-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:13px;}
+.check-icon{flex-shrink:0;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.check-item.ok .check-icon{background:rgba(46,158,91,0.15);color:var(--pass);}
+.check-item.fail .check-icon{background:rgba(217,72,61,0.15);color:var(--fail);}
+.check-item-body{flex:1;}
+.check-item-name{font-weight:600;}
+.check-item-msg{color:var(--text-dim);font-size:12px;margin-top:2px;}
+
+.detail-grid{display:grid;grid-template-columns:120px 1fr;gap:8px 16px;font-size:13px;}
+.detail-grid .label{color:var(--text-dim);}
+.detail-grid .value{color:var(--text);word-break:break-all;}
+
+@media (max-width:820px){
+  .sidebar{width:64px;}
+  .brand-sub,.nav-item span{display:none;}
+  .main{padding:24px 16px;}
+}
+
+/* ---------- 统计卡片 ---------- */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-panel);
+  padding:16px 18px;position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);
+}
+.stat-card.stat-pass::before{background:var(--pass);}
+.stat-card.stat-fail::before{background:var(--fail);}
+.stat-card.stat-time::before{background:var(--running);}
+.stat-label{font-size:12px;color:var(--text-dim);margin-bottom:6px;font-weight:500;}
+.stat-value{font-size:26px;font-weight:700;color:var(--text);line-height:1.2;}
+.stat-sub{font-size:11.5px;color:var(--text-faint);margin-top:4px;}
+
+/* ---------- 执行中看板 ---------- */
+.running-board{
+  background:linear-gradient(135deg,#f0f9f8 0%,#e8f4f3 100%);
+  border:1px solid #b8ddd9;border-radius:var(--radius-panel);
+  padding:16px 18px;margin-bottom:20px;
+}
+.running-board-title{
+  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--accent);margin-bottom:12px;
+}
+.running-item{
+  display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid rgba(42,163,156,0.15);
+}
+.running-item:first-of-type{border-top:none;padding-top:0;}
+.running-info{flex:1;min-width:0;}
+.running-name{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.running-meta{font-size:12px;color:var(--text-dim);display:flex;gap:12px;align-items:center;}
+.progress-wrap{width:160px;flex-shrink:0;}
+.progress-bar{height:6px;background:rgba(42,163,156,0.15);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#3dbcb5);border-radius:3px;transition:width 0.3s;animation:progressShine 2s infinite;}
+@keyframes progressShine{0%{opacity:0.7;}50%{opacity:1;}100%{opacity:0.7;}}
+.progress-text{font-size:11px;color:var(--accent);font-weight:600;margin-top:3px;}
+.running-empty{font-size:13px;color:var(--text-dim);text-align:center;padding:8px 0;}
+
+/* ---------- 筛选区 ---------- */
+.filter-bar{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-panel);
+  padding:14px 16px;
+}
+.filter-bar .field{min-width:140px;flex:0 0 auto;}
+.filter-bar .field input, .filter-bar .field select{font-size:13px;padding:7px 10px;}
+.filter-bar .field label{font-size:11.5px;}
+
+/* ---------- 筛选区 v2（简洁版） ---------- */
+.filter-bar-v2{
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-panel);
+  padding:12px 16px;
+}
+/* 状态按钮组 */
+.status-btn-group{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-control);overflow:hidden;flex-shrink:0;}
+.status-btn{
+  padding:7px 16px;background:var(--surface);color:var(--text-dim);font-size:12.5px;
+  font-weight:500;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;
+}
+.status-btn:hover{background:var(--surface-2);color:var(--text);}
+.status-btn.active{background:var(--accent-dim);color:var(--accent);font-weight:600;}
+.status-btn[data-status="passed"].active{background:rgba(46,158,91,0.12);color:var(--pass);}
+.status-btn[data-status="failed"].active{background:rgba(220,38,38,0.1);color:var(--fail);}
+/* 搜索框 */
+.search-box{position:relative;flex:1;min-width:180px;max-width:320px;}
+.search-box input{
+  width:100%;padding:8px 32px 8px 12px;border:1px solid var(--border);border-radius:var(--radius-control);
+  font-size:13px;font-weight:500;background:var(--bg);color:var(--text);outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  font-family:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(42,163,156,0.12);}
+.search-clear{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:20px;height:20px;border-radius:50%;border:none;background:var(--surface-2);
+  color:var(--text-faint);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.search-clear:hover{background:var(--border);color:var(--text-dim);}
+/* 更多筛选展开区 */
+.more-filters{
+  width:100%;display:flex;gap:12px;flex-wrap:wrap;align-items:center;
+  padding-top:12px;margin-top:4px;border-top:1px dashed var(--border);
+}
+/* 筛选按钮（和批量操作按钮风格统一） */
+.filter-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;border:1px solid #d1d5db;
+  background:#fff;color:#4b5563;line-height:1;
+}
+.filter-btn:hover{background:#f9fafb;border-color:#9ca3af;color:#1f2937;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.filter-btn:active{transform:scale(0.98);}
+.filter-btn svg{width:15px;height:15px;flex-shrink:0;}
+.filter-btn-arrow{font-size:11px;opacity:0.7;}
+.filter-btn-reset{color:#6b7280;}
+.filter-btn-reset:hover{color:#374151;}
+
+/* ---------- 用例名称省略 ---------- */
+.case-name{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle;color:#111827;font-weight:600;}
+.case-name:hover{color:var(--accent);}
+
+/* ---------- 查看全部链接 ---------- */
+.view-all-link{
+  text-align:center;padding:12px;margin-top:4px;
+}
+.view-all-link a{
+  color:var(--accent);font-size:13px;font-weight:600;text-decoration:none;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.view-all-link a:hover{text-decoration:underline;}
+
+/* ---------- 骨架屏 ---------- */
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,#e8ecef 50%,var(--surface-2) 75%);background-size:200% 100%;animation:skeletonShine 1.5s infinite;border-radius:4px;}
+@keyframes skeletonShine{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.skeleton-row{height:44px;margin:0 10px;}
+
+/* ---------- 运行中状态标签 ---------- */
+.pill-running{background:rgba(37,99,235,0.1);color:#2563eb;border-color:rgba(37,99,235,0.2);}
+.pill-running .dot{background:#2563eb;animation:pulse 1.2s infinite;}
+
+/* ---------- 批量勾选 ---------- */
+.batch-bar{
+  display:flex;align-items:center;gap:14px;padding:12px 16px;
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+  margin-bottom:14px;font-size:13px;color:#475569;
+}
+.batch-bar input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+.batch-select-all{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:500;color:#334155;}
+.batch-selected-info{color:#64748b;font-size:12.5px;}
+.batch-count{font-weight:700;color:var(--accent);font-size:14px;}
+
+/* ---------- 自定义下拉组件 ---------- */
+.custom-select{position:relative;width:100%;}
+.filter-time-select{width:140px;flex-shrink:0;}
+.more-filters .custom-select{min-width:160px;flex:0 0 auto;}
+.custom-select-trigger{
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;padding:7px 10px;
+  background:#fff;border:1px solid #d1d5db;border-radius:6px;
+  font-size:13px;font-weight:400;color:#374151;
+  cursor:pointer;transition:border-color 0.15s ease,box-shadow 0.15s ease;
+  min-height:32px;
+}
+.custom-select-trigger:hover{border-color:#9ca3af;}
+.custom-select.open .custom-select-trigger{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(42,163,156,0.12);
+}
+.custom-select-value{
+  flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding-right:8px;
+}
+.custom-select-value.placeholder{color:#9ca3af;}
+.custom-select-arrow{
+  width:16px;height:16px;color:#9ca3af;flex-shrink:0;
+  transition:transform 0.2s ease;
+}
+.custom-select.open .custom-select-arrow{transform:rotate(180deg);}
+.custom-select-options{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:#fff;border:1px solid #e5e7eb;border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.06);
+  max-height:280px;overflow-y:auto;
+  z-index:50;display:none;
+  padding:4px;
+}
+.custom-select.open .custom-select-options{display:block;animation:dropdownIn 0.15s ease-out;}
+@keyframes dropdownIn{
+  from{opacity:0;transform:translateY(-4px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.custom-select-option{
+  display:flex;align-items:center;
+  height:38px;padding:0 12px;
+  font-size:14px;font-weight:400;color:#374151;
+  border-radius:6px;cursor:pointer;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  transition:background-color 0.1s ease;
+}
+.custom-select-option:hover{background:rgba(42,163,156,0.06);}
+.custom-select-option.selected{
+  background:rgba(42,163,156,0.1);color:var(--accent);font-weight:500;
+}
+.custom-select-option.selected::after{
+  content:'✓';margin-left:auto;color:var(--accent);font-weight:600;
+}
+.custom-select-options::-webkit-scrollbar{width:6px;}
+.custom-select-options::-webkit-scrollbar-track{background:transparent;}
+.custom-select-options::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px;}
+.custom-select-options::-webkit-scrollbar-thumb:hover{background:#9ca3af;}
+
+/* ---------- 多选下拉组件（模块+用例级联） ---------- */
+.multi-select{position:relative;width:100%;}
+.multi-select-trigger{
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;padding:7px 10px;
+  background:#fff;border:1px solid #d1d5db;border-radius:6px;
+  font-size:13px;font-weight:400;color:#374151;
+  cursor:pointer;transition:border-color 0.15s ease,box-shadow 0.15s ease;
+  min-height:32px;
+}
+.multi-select-trigger:hover{border-color:#9ca3af;}
+.multi-select.open .multi-select-trigger{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(42,163,156,0.12);
+}
+.multi-select-value{
+  flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding-right:8px;
+}
+.multi-select-value.placeholder{color:#9ca3af;}
+.multi-select-panel{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:#fff;border:1px solid #e5e7eb;border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.06);
+  max-height:380px;z-index:50;display:none;
+  overflow:hidden;
+}
+.multi-select.open .multi-select-panel{display:block;animation:dropdownIn 0.15s ease-out;}
+.multi-select-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid #f3f4f6;
+  background:#fafafa;
+}
+.multi-select-checkall{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  font-size:13px;font-weight:500;color:#374151;
+}
+.multi-select-checkall input{cursor:pointer;width:16px;height:16px;accent-color:var(--accent);}
+.multi-select-count{font-size:12.5px;color:#6b7280;font-weight:500;}
+.multi-select-list{
+  max-height:320px;overflow-y:auto;overflow-x:hidden;padding:6px 8px;
+}
+.multi-select-empty{padding:20px 30px;text-align:center;color:var(--text-faint);font-size:13px;}
+.multi-select-list::-webkit-scrollbar{width:6px;}
+.multi-select-list::-webkit-scrollbar-track{background:transparent;}
+.multi-select-list::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px;}
+.multi-select-list::-webkit-scrollbar-thumb:hover{background:#9ca3af;}
+
+/* 模块节点 */
+.multi-module{
+  margin-bottom:2px;
+}
+.multi-module-header{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:6px;cursor:pointer;
+  transition:background 0.1s;
+}
+.multi-module-header:hover{background:#f9fafb;}
+.multi-module-arrow{
+  width:16px;height:16px;color:#9ca3af;flex-shrink:0;
+  transition:transform 0.2s ease;
+}
+.multi-module.expanded .multi-module-arrow{transform:rotate(90deg);}
+.multi-module-checkbox{
+  width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;
+}
+.multi-module-name{
+  flex:1;font-size:13.5px;font-weight:600;color:#1f2937;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.multi-module-count{
+  font-size:12px;color:#6b7280;font-weight:500;flex-shrink:0;
+  background:#f3f4f6;padding:2px 8px;border-radius:999px;
+}
+
+/* 用例节点 */
+.multi-cases{
+  display:none;padding-left:34px;padding-bottom:4px;
+}
+.multi-module.expanded .multi-cases{display:block;}
+.multi-case-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:6px;cursor:pointer;
+  transition:background 0.1s;
+  min-height:36px;
+}
+.multi-case-item:hover{background:rgba(42,163,156,0.06);}
+.multi-case-item.selected{background:rgba(42,163,156,0.08);}
+.multi-case-checkbox{
+  width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;
+}
+.multi-case-name{
+  flex:1;font-size:13.5px;font-weight:400;color:#1f2937;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  min-width:0;
+}
+.multi-case-steps{
+  font-size:11.5px;color:#9ca3af;flex-shrink:0;
+  font-family:'IBM Plex Mono',monospace;
+  background:#f3f4f6;padding:2px 8px;border-radius:999px;
+}
+
+/* 批量操作按钮 */
+.batch-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;border:1px solid transparent;
+}
+.batch-btn svg{width:15px;height:15px;}
+.batch-btn-export{
+  background:#fff;color:#334155;border-color:#cbd5e1;
+}
+.batch-btn-export:hover{
+  background:#f1f5f9;border-color:#94a3b8;color:#1e293b;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);
+}
+.batch-btn-delete{
+  background:#fef2f2;color:#dc2626;border-color:#fecaca;
+}
+.batch-btn-delete:hover{
+  background:#dc2626;color:#fff;border-color:#dc2626;
+  box-shadow:0 2px 8px rgba(220,38,38,0.25);
+}
+
+/* ---------- 空状态增强 ---------- */
+.empty-icon{font-size:36px;margin-bottom:8px;opacity:0.4;}
+.empty .btn{margin-top:12px;}
+
+/* ---------- 深色模式覆盖 ---------- */
+html[data-theme="dark"] body{background:var(--bg);color:var(--text);}
+html[data-theme="dark"] .sidebar{background:var(--surface);border-right-color:var(--border);}
+html[data-theme="dark"] .brand{border-bottom-color:var(--border);}
+html[data-theme="dark"] .nav-item:hover{background:var(--surface-2);color:var(--text);}
+html[data-theme="dark"] .nav-item.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-dim);}
+html[data-theme="dark"] .panel{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .modern-table-wrap{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .modern-table thead th{background:var(--surface-2);color:#cbd5e1;border-bottom-color:var(--border);}
+html[data-theme="dark"] .modern-table td{color:var(--text);border-bottom-color:var(--border);}
+html[data-theme="dark"] .modern-table tbody tr:hover{background:var(--surface-2);}
+html[data-theme="dark"] .stat-card{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .case-group{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .case-group-header:hover{background:var(--surface-2);}
+html[data-theme="dark"] .case-item{color:var(--text);}
+html[data-theme="dark"] .case-item:hover{background:var(--surface-2);}
+html[data-theme="dark"] .step-card{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .step-icon-btn{background:var(--surface);border-color:var(--border);color:var(--text-dim);}
+html[data-theme="dark"] .step-field input,.step-field select{background:var(--surface);border-color:var(--border);color:var(--text);}
+html[data-theme="dark"] .step-field label{color:#cbd5e1;}
+html[data-theme="dark"] .edit-section-title{color:var(--text);border-bottom-color:var(--border);}
+html[data-theme="dark"] .modal{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .modal-title{color:var(--text);}
+html[data-theme="dark"] .confirm-dialog{background:var(--surface);}
+html[data-theme="dark"] .confirm-text{color:var(--text);}
+html[data-theme="dark"] .custom-select-trigger{background:var(--surface);border-color:var(--border);color:var(--text);}
+html[data-theme="dark"] .custom-select-options{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .custom-select-option{color:var(--text);}
+html[data-theme="dark"] .custom-select-option:hover{background:var(--surface-2);}
+html[data-theme="dark"] .custom-select-value.placeholder{color:var(--text-faint);}
+html[data-theme="dark"] .multi-select-trigger{background:var(--surface);border-color:var(--border);color:var(--text);}
+html[data-theme="dark"] .multi-select-panel{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .multi-select-toolbar{background:var(--surface-2);border-bottom-color:var(--border);}
+html[data-theme="dark"] .multi-select-value.placeholder{color:var(--text-faint);}
+html[data-theme="dark"] .multi-case-item:hover{background:rgba(45,212,191,0.08);}
+html[data-theme="dark"] .multi-case-item.selected{background:rgba(45,212,191,0.12);}
+html[data-theme="dark"] .multi-case-name{color:var(--text);}
+html[data-theme="dark"] .multi-module-name{color:var(--text);}
+html[data-theme="dark"] .multi-module-header:hover{background:var(--surface-2);}
+html[data-theme="dark"] .mode-segmented{background:var(--surface-2);border-color:var(--border);}
+html[data-theme="dark"] .mode-segmented label{color:#AEBBD0;font-weight:500;}
+html[data-theme="dark"] .mode-segmented label:hover{color:#C4CFDF;background:var(--surface);}
+html[data-theme="dark"] .mode-segmented label:has(input[type="radio"]:checked){background:var(--surface);color:var(--accent);}
+html[data-theme="dark"] .mode-segmented label:has(input[type="radio"]:checked):hover{background:var(--surface);color:var(--accent);}
+html[data-theme="dark"] .mode-segmented label:has(input[type="radio"]:checked) .mode-icon{color:var(--accent);}
+/* 执行任务页顶部配置区：深色模式下 Label 提亮 */
+html[data-theme="dark"] #view-execute .field-row .field label{
+  font-size:13px;
+  font-weight:500;
+  color:#C4CFDF;
+  letter-spacing:0.01em;
+}
+/* 深色模式下输入框文字 14px 正常字重，保证清晰 */
+html[data-theme="dark"] #view-execute .field-row .field input,
+html[data-theme="dark"] #view-execute .field-row .field select{
+  font-size:14px;
+  font-weight:400;
+  color:var(--text);
+}
+/* 深色模式下执行任务页下拉框触发器（输入框）文字 14px 正常字重 */
+html[data-theme="dark"] #view-execute .custom-select-trigger,
+html[data-theme="dark"] #view-execute .multi-select-trigger{
+  font-size:14px;
+  font-weight:400;
+  color:var(--text);
+}
+html[data-theme="dark"] .btn{background:var(--surface-2);border-color:var(--border);color:var(--text);}
+html[data-theme="dark"] .btn:hover{border-color:var(--text-dim);}
+html[data-theme="dark"] .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+html[data-theme="dark"] .btn-primary:hover{background:#24908a;border-color:#24908a;}
+html[data-theme="dark"] .btn-ghost{background:transparent;}
+html[data-theme="dark"] .filter-btn{background:var(--surface-2);border-color:var(--border);color:var(--text);}
+html[data-theme="dark"] .filter-btn:hover{background:var(--surface);border-color:var(--text-dim);color:var(--text);box-shadow:none;}
+html[data-theme="dark"] .filter-btn-reset{color:var(--text-dim);}
+html[data-theme="dark"] .filter-btn-reset:hover{color:var(--text);}
+html[data-theme="dark"] .dropzone{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .dropzone:hover{border-color:var(--accent);background:var(--surface-2);}
+html[data-theme="dark"] .case-search-box input{background:var(--surface);border-color:var(--border);color:var(--text);}
+html[data-theme="dark"] .batch-btn-export{background:var(--surface);color:var(--text);border-color:var(--border);}
+html[data-theme="dark"] .batch-btn-export:hover{background:var(--surface-2);border-color:var(--text-dim);color:var(--text);}
+html[data-theme="dark"] .view-title{color:var(--text);}
+html[data-theme="dark"] .view-desc{color:var(--text-dim);}
+html[data-theme="dark"] .panel-section-title{color:var(--text);}
+html[data-theme="dark"] .status-tag{color:var(--text);}
+html[data-theme="dark"] .empty-title{color:var(--text);}
+html[data-theme="dark"] .empty p{color:var(--text-dim);}
+html[data-theme="dark"] .running-board{background:var(--surface);border-color:var(--border);}
+html[data-theme="dark"] .running-item{background:var(--surface-2);}
+html[data-theme="dark"] .login-page{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);}
+html[data-theme="dark"] .login-card{background:var(--surface);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+html[data-theme="dark"] .login-brand-sub{color:var(--text-faint);}
+html[data-theme="dark"] .login-field label{color:var(--text-dim);}
+html[data-theme="dark"] .login-field input{background:var(--surface);border-color:var(--border);color:var(--text);}
+html[data-theme="dark"] .login-field input::placeholder{color:var(--text-faint);}
+/* 浏览器自动填充的深色适配（账号框会应用 autofill 背景色） */
+html[data-theme="dark"] .login-field input:-webkit-autofill,
+html[data-theme="dark"] .login-field input:-webkit-autofill:hover,
+html[data-theme="dark"] .login-field input:-webkit-autofill:focus,
+html[data-theme="dark"] .login-field input:-webkit-autofill:active{
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0px 1000px var(--surface) inset;
+  box-shadow: 0 0 0px 1000px var(--surface) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-out 0s;
+}
+html[data-theme="dark"] .login-footer{color:var(--text-faint);border-top-color:var(--border);}
+html[data-theme="dark"] .toast{background:#1e293b;color:#e2e8f0;border:1px solid var(--border);}
+html[data-theme="dark"] .toast.show.err{background:#7f1d1d;color:#fecaca;}
+html[data-theme="dark"] .toast.show.ok{background:#14532d;color:#bbf7d0;}
+/* 深色模式下弹窗/下拉框遮罩后的内联浅色背景兜底 */
+html[data-theme="dark"] .modal-overlay{background:rgba(2,6,23,0.7);}
+html[data-theme="dark"] .confirm-overlay{background:rgba(2,6,23,0.6);}
+/* 主题切换按钮 */
+.theme-toggle-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text-dim);cursor:pointer;
+  transition:all 0.15s ease;flex-shrink:0;
+}
+.theme-toggle-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--surface-2);}
+.theme-toggle-btn svg{width:15px;height:15px;}
+</style>
+</head>
+<body>
+
+<!-- 登录页面 -->
+<div class="login-page" id="loginPage" style="display:none;">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="login-brand-dot"></span>
+      <span class="login-brand-name">Testbench</span>
+    </div>
+    <div class="login-brand-sub">UI 自动化测试平台</div>
+    <div class="login-field">
+      <label>账号</label>
+      <input type="text" id="loginUsername" placeholder="请输入账号" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>密码</label>
+      <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">登 录</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-footer">请使用管理员账号登录</div>
+    <div style="display:flex;justify-content:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);">
+      <button class="theme-toggle-btn" id="loginThemeToggle" onclick="toggleTheme()" title="切换深色/浅色模式"></button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><span class="brand-dot"></span>Testbench</div>
+      <div class="brand-sub">UI 自动化测试平台</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-view="servers">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><circle cx="7" cy="7" r="0.8" fill="currentColor"/><circle cx="7" cy="17" r="0.8" fill="currentColor"/></svg>
+        <span>测试环境</span>
+      </div>
+      <div class="nav-item" data-view="cases">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M9 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+        <span>测试用例</span>
+      </div>
+      <div class="nav-item" data-view="execute">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        <span>执行任务</span>
+      </div>
+      <div class="nav-item" data-view="reports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+        <span>执行报告</span>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="running-badge" id="runningBadge" style="display:none;">
+        <span class="pulse"></span><span id="runningCount">0</span> 个任务执行中
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);margin-top:8px;">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px;border-radius:6px;" onclick="openProfile()" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background='transparent'" title="点击修改密码">
+          <div id="userAvatar" style="width:28px;height:28px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;overflow:hidden;flex-shrink:0;">A</div>
+          <span style="font-size:13px;color:var(--text-dim);" id="currentUser">admin</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" title="切换深色/浅色模式"></button>
+          <span style="font-size:12px;color:var(--text-faint);cursor:pointer;padding:4px 8px;border-radius:4px;" onclick="doLogout()" onmouseover="this.style.background='var(--surface-2)'" onmouseout="this.style.background='transparent'">退出</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ============ 服务器 ============ -->
+    <section class="view active" id="view-servers">
+      <div class="view-head">
+        <div>
+          <h1 class="view-title">测试环境</h1>
+        </div>
+        <button class="btn btn-primary" onclick="openServerModal()">+ 添加环境</button>
+      </div>
+
+      <div class="modern-table-wrap">
+        <table id="serverTable" class="modern-table">
+          <thead><tr><th>环境名称</th><th>环境地址</th><th>备注</th><th style="text-align:right;">操作</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty" id="serverEmpty" style="display:none;">
+          <div class="empty-icon">🌐</div>
+          <div class="empty-title">还没有测试环境</div>
+          <p>点击右上角「+ 添加环境」，填写环境名称和 Base URL（如 http://172.16.10.151）。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 测试用例 ============ -->
+    <section class="view" id="view-cases">
+      <div class="view-head">
+        <div>
+          <h1 class="view-title">测试用例</h1>
+          <div class="view-desc">用 Excel 表格描述业务测试步骤后导入。测试人员只描述「做什么」，不需要填写元素定位信息，平台会自动识别和定位元素。</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-primary" onclick="createCase()">+ 新增用例</button>
+          <button class="btn btn-ghost" onclick="downloadTemplate()">下载模板</button>
+        </div>
+      </div>
+
+      <label class="dropzone" id="dropzone">
+        <div id="dz-text">点击选择 Excel 文件（.xlsx），或拖拽到此处</div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+      </label>
+
+      <!-- 搜索筛选栏 -->
+      <div class="case-toolbar">
+        <div class="case-search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="caseSearch" placeholder="搜索用例名称或模块..." oninput="renderCaseGroups()">
+        </div>
+        <div class="case-filter-select">
+          <div class="custom-select" id="moduleFilterCustom" data-native="moduleFilter" style="width:160px;">
+            <select id="moduleFilter" style="display:none;" onchange="renderCaseGroups()">
+              <option value="">全部模块</option>
+            </select>
+            <div class="custom-select-trigger" onclick="toggleCustomSelect('moduleFilterCustom')">
+              <span class="custom-select-value" id="moduleFilterValue">全部模块</span>
+              <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="custom-select-options" id="moduleFilterOptions"></div>
+          </div>
+        </div>
+        <div class="case-toolbar-actions">
+          <button class="btn btn-sm btn-ghost" onclick="expandAllCases()">全部展开</button>
+          <button class="btn btn-sm btn-ghost" onclick="collapseAllCases()">全部折叠</button>
+        </div>
+      </div>
+
+      <!-- 模块分组列表 -->
+      <div class="case-groups-container" id="caseGroupsContainer">
+        <div class="empty" id="caseEmpty" style="display:none;">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">还没有导入任何用例</div>
+          <p>下载模板，按格式填写步骤后拖入上方区域导入</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 执行任务 ============ -->
+    <section class="view" id="view-execute">
+      <div class="view-head">
+        <div>
+          <h1 class="view-title">执行任务</h1>
+          <div class="view-desc">选择测试用例、测试环境和浏览器，本机 Playwright 启动浏览器访问测试环境并执行。</div>
+        </div>
+      </div>
+
+      <div class="panel" style="padding:14px 18px;">
+        <div class="field-row" style="gap:12px;">
+          <div class="field" style="flex:0.7;min-width:100px;">
+            <label>测试模块</label>
+            <div class="custom-select" id="runModuleCustom" data-native="run-module">
+              <select id="run-module" style="display:none;" onchange="onRunModuleChange()">
+                <option value="">全部模块</option>
+              </select>
+              <div class="custom-select-trigger" onclick="toggleCustomSelect('runModuleCustom')">
+                <span class="custom-select-value" id="runModuleValue">全部模块</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="custom-select-options" id="runModuleOptions"></div>
+            </div>
+          </div>
+          <div class="field" style="flex:1.8;min-width:200px;">
+            <label>测试用例（可多选）</label>
+            <div class="multi-select" id="runCaseMultiSelect">
+              <div class="multi-select-trigger" onclick="toggleMultiSelect()">
+                <span class="multi-select-value" id="runCaseMultiValue">请选择测试用例</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="multi-select-panel" id="runCaseMultiPanel">
+                <div class="multi-select-toolbar">
+                  <label class="multi-select-checkall">
+                    <input type="checkbox" id="runCaseCheckAll" onchange="toggleSelectAllCases(this.checked)">
+                    <span>全选</span>
+                  </label>
+                  <span class="multi-select-count" id="runCaseSelectedCount">已选 0 个</span>
+                </div>
+                <div class="multi-select-list" id="runCaseMultiList"></div>
+              </div>
+            </div>
+          </div>
+          <div class="field" style="flex:1.5;min-width:180px;">
+            <label>测试环境</label>
+            <div class="custom-select" id="runServerCustom" data-native="run-server">
+              <select id="run-server" style="display:none;"></select>
+              <div class="custom-select-trigger" onclick="toggleCustomSelect('runServerCustom')">
+                <span class="custom-select-value placeholder" id="runServerValue">请选择测试环境</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="custom-select-options" id="runServerOptions"></div>
+            </div>
+          </div>
+          <div class="field" style="flex:0.7;min-width:90px;">
+            <label>浏览器</label>
+            <div class="custom-select" id="runBrowserCustom" data-native="run-browser">
+              <select id="run-browser" style="display:none;">
+                <option value="chromium">Chromium</option>
+                <option value="chrome">Chrome</option>
+                <option value="edge">Edge</option>
+              </select>
+              <div class="custom-select-trigger" onclick="toggleCustomSelect('runBrowserCustom')">
+                <span class="custom-select-value" id="runBrowserValue">Chromium</span>
+                <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="custom-select-options" id="runBrowserOptions"></div>
+            </div>
+          </div>
+          <div class="field" style="flex:0.75;min-width:110px;margin-right:8px;">
+            <label>执行模式</label>
+            <div class="mode-segmented">
+              <label>
+                <input type="radio" name="run-mode" value="headed">
+                <span class="mode-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </span>
+                <span>有头</span>
+              </label>
+              <label>
+                <input type="radio" name="run-mode" value="headless" checked>
+                <span class="mode-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </span>
+                <span>无头</span>
+              </label>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="runBtn" onclick="triggerRun()" style="height:34px;padding:0 22px;font-size:13px;flex-shrink:0;">开始执行</button>
+        </div>
+      </div>
+
+      <!-- 当前执行中 -->
+      <div class="running-board" id="runningBoard" style="display:none;">
+        <div class="running-board-title">
+          <span class="pulse" style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
+          当前执行中
+        </div>
+        <div id="runningList"></div>
+      </div>
+
+      <!-- 最近执行 -->
+      <div class="modern-table-wrap">
+        <div class="panel-section-title">
+          <span>最近执行</span>
+          <span class="faint" style="font-size:11.5px;">仅显示最近 8 条</span>
+        </div>
+        <table class="modern-table">
+          <thead><tr><th style="width:50px;">#</th><th>用例</th><th>环境</th><th style="width:90px;">状态</th><th style="width:80px;">耗时</th><th style="width:150px;">开始时间</th></tr></thead>
+          <tbody id="recentRunsBody"></tbody>
+        </table>
+        <div class="empty" id="recentEmpty" style="display:none;">
+          <div class="empty-icon">▶</div>
+          <div class="empty-title">还没有执行记录</div>
+          <p>选择用例、环境和浏览器后点击"开始执行"</p>
+        </div>
+        <div class="view-all-link">
+          <a href="javascript:void(0)" onclick="switchView('reports')">查看全部历史报告 →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 执行报告 ============ -->
+    <section class="view" id="view-reports">
+      <div class="view-head">
+        <div>
+          <h1 class="view-title">执行报告</h1>
+          <div class="view-desc">历史执行记录归档与深度分析，点击某一条查看每一步的详细结果与失败截图。</div>
+        </div>
+      </div>
+
+      <!-- 统计概览 -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-label">总执行数</div><div class="stat-value" id="statTotal">-</div><div class="stat-sub">全部历史执行</div></div>
+        <div class="stat-card stat-pass"><div class="stat-label">通过率</div><div class="stat-value" id="statPassRate">-</div><div class="stat-sub" id="statPassSub">通过 / 总数</div></div>
+        <div class="stat-card stat-time"><div class="stat-label">平均耗时</div><div class="stat-value" id="statAvgTime">-</div><div class="stat-sub">已完成任务</div></div>
+        <div class="stat-card stat-fail"><div class="stat-label">今日失败</div><div class="stat-value" id="statTodayFail">-</div><div class="stat-sub">今日失败任务</div></div>
+      </div>
+
+      <!-- 筛选区 -->
+      <div class="filter-bar-v2">
+        <!-- 状态筛选按钮组 -->
+        <div class="status-btn-group">
+          <button class="status-btn active" data-status="all" onclick="applyStatusFilter('all')">全部</button>
+          <button class="status-btn" data-status="passed" onclick="applyStatusFilter('passed')">通过</button>
+          <button class="status-btn" data-status="failed" onclick="applyStatusFilter('failed')">失败</button>
+        </div>
+
+        <!-- 时间范围下拉框 -->
+        <div class="custom-select filter-time-select" id="filterTimeCustom" data-native="filterTime">
+          <select id="filterTime" style="display:none;" onchange="applyFilters()">
+            <option value="all">全部时间</option>
+            <option value="today">今天</option>
+            <option value="7days">近7天</option>
+            <option value="30days">近30天</option>
+          </select>
+          <div class="custom-select-trigger" onclick="toggleCustomSelect('filterTimeCustom')">
+            <span class="custom-select-value" id="filterTimeValue">全部时间</span>
+            <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="custom-select-options" id="filterTimeOptions"></div>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="search-box">
+          <input type="text" id="filterSearch" placeholder="搜索用例名称..." oninput="toggleSearchClear()" onkeydown="if(event.key==='Enter')applyFilters()">
+          <button class="search-clear" id="searchClearBtn" onclick="clearSearch()" style="display:none;">&times;</button>
+        </div>
+
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+          <button class="filter-btn" id="moreFilterBtn" onclick="toggleMoreFilters()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            <span>更多筛选</span>
+            <span class="filter-btn-arrow">▾</span>
+          </button>
+          <button class="filter-btn filter-btn-reset" onclick="resetFilters()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>重置</span>
+          </button>
+        </div>
+
+        <!-- 展开的更多筛选 -->
+        <div class="more-filters" id="moreFilters" style="display:none;">
+          <!-- 环境下拉框 -->
+          <div class="custom-select" id="filterEnvCustom" data-native="filterEnv">
+            <select id="filterEnv" style="display:none;" onchange="applyFilters()">
+              <option value="all">全部环境</option>
+            </select>
+            <div class="custom-select-trigger" onclick="toggleCustomSelect('filterEnvCustom')">
+              <span class="custom-select-value" id="filterEnvValue">全部环境</span>
+              <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="custom-select-options" id="filterEnvOptions"></div>
+          </div>
+
+          <!-- 浏览器下拉框 -->
+          <div class="custom-select" id="filterBrowserCustom" data-native="filterBrowser">
+            <select id="filterBrowser" style="display:none;" onchange="applyFilters()">
+              <option value="all">全部浏览器</option>
+              <option value="chromium">Chromium</option>
+              <option value="chrome">Chrome</option>
+              <option value="edge">Edge</option>
+            </select>
+            <div class="custom-select-trigger" onclick="toggleCustomSelect('filterBrowserCustom')">
+              <span class="custom-select-value" id="filterBrowserValue">全部浏览器</span>
+              <svg class="custom-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="custom-select-options" id="filterBrowserOptions"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 批量操作栏 -->
+      <div class="batch-bar" id="batchBar" style="display:none;">
+        <label class="batch-select-all">
+          <input type="checkbox" id="selectAll" onchange="toggleSelectAll(event)" style="accent-color:var(--accent);cursor:pointer;width:16px;height:16px;">
+          <span>全选</span>
+        </label>
+        <span class="batch-selected-info">已选 <span class="batch-count" id="selectedCount">0</span> 条</span>
+        <div style="margin-left:auto;display:flex;gap:10px;">
+          <button class="batch-btn batch-btn-export" onclick="batchExport()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            导出选中
+          </button>
+          <button class="batch-btn batch-btn-delete" onclick="batchDelete()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            删除选中
+          </button>
+        </div>
+      </div>
+
+      <!-- 报告列表 -->
+      <div class="modern-table-wrap">
+        <table class="modern-table">
+          <thead><tr>
+            <th style="width:44px;text-align:center;"><input type="checkbox" id="selectAllHead" onchange="toggleSelectAll(event)" style="accent-color:var(--accent);cursor:pointer;width:15px;height:15px;"></th>
+            <th style="width:50px;">#</th><th>用例</th><th>环境</th><th style="width:80px;">浏览器</th><th style="width:90px;">状态</th><th style="width:80px;">耗时</th><th style="width:150px;">开始时间</th><th style="width:70px;text-align:right;">操作</th>
+          </tr></thead>
+          <tbody id="allRunsBody"></tbody>
+        </table>
+        <div class="empty" id="reportsEmpty" style="display:none;">
+          <div class="empty-icon">📊</div>
+          <div class="empty-title">暂无执行报告</div>
+          <p>前往"执行任务"触发一次运行</p>
+          <button class="btn btn-primary btn-sm" onclick="switchView('execute')">去执行任务</button>
+        </div>
+        <div id="reportsSkeleton" style="display:none;padding:10px 0;">
+          <div class="skeleton skeleton-row"></div>
+          <div class="skeleton skeleton-row"></div>
+          <div class="skeleton skeleton-row"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal-overlay" id="runModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()" aria-label="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- 删除确认弹窗 -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-dialog">
+    <div class="confirm-header">
+      <div class="confirm-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="confirm-title">确认删除</div>
+    </div>
+    <div class="confirm-body" id="confirmBody">确定要删除该环境吗？删除后不可恢复。</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel-btn" onclick="closeConfirm()">取消</button>
+      <button class="confirm-danger-btn" id="confirmOkBtn">删除</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let servers = [], cases = [], runs = [];
+
+/* ---------------- 通用工具 ---------------- */
+function toast(msg, type='ok'){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(()=>t.className='toast', 2500);
+}
+async function api(path, opts={}){
+  const res = await fetch(API + path, opts);
+  if(!res.ok){
+    let msg = '请求失败';
+    try{ msg = (await res.json()).detail || msg; }catch(e){}
+    throw new Error(msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+// HTML转义，防止特殊字符导致渲染错误
+function escapeHtml(str){
+  if(str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// JavaScript字符串转义，防止单引号等特殊字符导致内联JS出错
+function escapeJsStr(str){
+  if(str == null) return '';
+  return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+}
+
+/* ---------------- 登录认证 ---------------- */
+function getToken(){ return localStorage.getItem('tb_token') || ''; }
+function setToken(t){ localStorage.setItem('tb_token', t); }
+function clearToken(){ localStorage.removeItem('tb_token'); }
+function getUsername(){ return localStorage.getItem('tb_username') || ''; }
+function setUsername(u){ localStorage.setItem('tb_username', u); }
+
+function showLogin(){
+  document.getElementById('loginPage').style.display = 'flex';
+  document.querySelector('.app').style.display = 'none';
+  document.getElementById('loginUsername').focus();
+}
+function hideLogin(){
+  document.getElementById('loginPage').style.display = 'none';
+  document.querySelector('.app').style.display = 'flex';
+  document.getElementById('currentUser').textContent = getUsername() || 'admin';
+  updateAvatarDisplay();
+}
+
+async function doLogin(){
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  if(!username || !password){ errEl.textContent = '请输入账号和密码'; return; }
+  btn.disabled = true; btn.textContent = '登录中…';
+  errEl.textContent = '';
+  try{
+    const res = await api('/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    if(res.ok){
+      setToken(res.token);
+      setUsername(res.username);
+      hideLogin();
+      await init();
+      toast('登录成功');
+    }
+  }catch(e){
+    errEl.textContent = e.message || '登录失败';
+  }
+  btn.disabled = false; btn.textContent = '登 录';
+}
+
+async function doLogout(){
+  try{ await api('/api/logout?token=' + encodeURIComponent(getToken()), {method:'POST'}); }catch(e){}
+  clearToken();
+  showLogin();
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').textContent = '';
+}
+
+/* ---------------- 主题切换（深色/浅色） ---------------- */
+function getThemeIcon(theme){
+  if(theme === 'dark'){
+    // 月亮图标
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+  // 太阳图标
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>';
+}
+function applyTheme(theme){
+  const root = document.documentElement;
+  if(theme === 'dark'){
+    root.setAttribute('data-theme', 'dark');
+    localStorage.setItem('tb-theme', 'dark');
+  }else{
+    root.removeAttribute('data-theme');
+    localStorage.setItem('tb-theme', 'light');
+  }
+  // 同步更新侧边栏和登录页的主题切换按钮图标
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.innerHTML = getThemeIcon(theme);
+  const loginBtn = document.getElementById('loginThemeToggle');
+  if(loginBtn) loginBtn.innerHTML = getThemeIcon(theme);
+}
+function toggleTheme(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  applyTheme(isDark ? 'light' : 'dark');
+}
+function initTheme(){
+  const saved = localStorage.getItem('tb-theme');
+  if(saved === 'dark'){
+    applyTheme('dark');
+  }else{
+    applyTheme('light');
+  }
+}
+
+async function checkLogin(){
+  const token = getToken();
+  if(!token){ showLogin(); return false; }
+  try{
+    const res = await api('/api/verify?token=' + encodeURIComponent(token));
+    if(res.ok){ hideLogin(); return true; }
+  }catch(e){}
+  clearToken();
+  showLogin();
+  return false;
+}
+
+/* ---------------- 个人设置（头像+密码） ---------------- */
+function getAvatarImage(){ return localStorage.getItem('tb_avatar_image') || ''; }
+function setAvatarImage(img){ localStorage.setItem('tb_avatar_image', img); }
+function removeAvatarImage(){ localStorage.removeItem('tb_avatar_image'); }
+
+// 临时存储上传的头像图片（base64），保存时才写入 localStorage
+let _pendingAvatarImage = '';
+
+// 默认头像样式
+const DEFAULT_AVATAR_BG = 'var(--accent-dim)';
+const DEFAULT_AVATAR_COLOR = 'var(--accent)';
+const DEFAULT_AVATAR_TEXT = 'A';
+
+function updateAvatarDisplay(){
+  const el = document.getElementById('userAvatar');
+  if(!el) return;
+  const img = getAvatarImage();
+  if(img){
+    el.textContent = '';
+    el.style.background = `url(${img}) center/cover no-repeat`;
+    el.style.color = 'transparent';
+  }else{
+    el.textContent = DEFAULT_AVATAR_TEXT;
+    el.style.background = DEFAULT_AVATAR_BG;
+    el.style.color = DEFAULT_AVATAR_COLOR;
+  }
+}
+
+function openProfile(){
+  document.getElementById('modalBody').innerHTML = `
+    <h2 style="margin:0 0 18px 0;font-size:17px;">个人设置</h2>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:10px;">修改密码</div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:4px;">旧密码</label>
+        <input type="password" id="profileOldPwd" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:4px;">新密码（至少4位）</label>
+        <input type="password" id="profileNewPwd" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:4px;">确认新密码</label>
+        <input type="password" id="profileConfirmPwd" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;">
+      </div>
+      <button class="btn btn-primary" style="padding:8px 18px;font-size:13px;" onclick="submitChangePassword()">修改密码</button>
+    </div>
+  `;
+  const modal = document.getElementById('runModal');
+  modal.querySelector('.modal').classList.add('modal-sm');
+  modal.classList.add('show');
+}
+
+function onAvatarFileChange(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('请选择图片文件', 'err'); return; }
+  if(file.size > 2 * 1024 * 1024){ toast('图片大小不能超过 2MB', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    _pendingAvatarImage = e.target.result;
+    const el = document.getElementById('profileAvatarPreview');
+    if(el){
+      el.style.background = `url(${_pendingAvatarImage}) center/cover no-repeat`;
+      el.style.color = 'transparent';
+      el.textContent = '';
+    }
+    toast('头像已选择，点击保存生效');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeUploadedAvatar(){
+  _pendingAvatarImage = '';
+  const el = document.getElementById('profileAvatarPreview');
+  if(el){
+    el.style.background = DEFAULT_AVATAR_BG;
+    el.style.color = DEFAULT_AVATAR_COLOR;
+    el.textContent = DEFAULT_AVATAR_TEXT;
+  }
+  // 如果之前已保存过图片，标记为待移除
+  if(getAvatarImage()){
+    _pendingAvatarImage = '__REMOVE__';
+  }
+  toast('已移除图片头像，点击保存生效');
+}
+
+function saveProfileAvatar(){
+  if(_pendingAvatarImage === '__REMOVE__'){
+    removeAvatarImage();
+  }else if(_pendingAvatarImage){
+    setAvatarImage(_pendingAvatarImage);
+  }
+  _pendingAvatarImage = '';
+  updateAvatarDisplay();
+  toast('头像已保存');
+  closeModal();
+}
+
+async function submitChangePassword(){
+  const oldPwd = document.getElementById('profileOldPwd').value;
+  const newPwd = document.getElementById('profileNewPwd').value;
+  const confirmPwd = document.getElementById('profileConfirmPwd').value;
+  if(!oldPwd || !newPwd || !confirmPwd){ toast('请填写完整密码信息', 'err'); return; }
+  if(newPwd !== confirmPwd){ toast('两次输入的新密码不一致', 'err'); return; }
+  if(newPwd.length < 4){ toast('新密码至少4位', 'err'); return; }
+  try{
+    await api('/api/change-password?token=' + encodeURIComponent(getToken()), {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({old_password: oldPwd, new_password: newPwd})
+    });
+    toast('密码修改成功，请重新登录');
+    closeModal();
+    doLogout();
+  }catch(e){
+    toast(e.message || '密码修改失败', 'err');
+  }
+}
+
+function fmtTime(iso){
+  if(!iso) return '-';
+  const d = new Date(iso + (iso.endsWith('Z')?'':'Z'));
+  return d.toLocaleString('zh-CN', {hour12:false});
+}
+function statusLabel(s){
+  return {pending:'等待中', running:'执行中', passed:'通过', failed:'失败', error:'失败',
+          online:'在线', offline:'离线', unknown:'未检测', checking:'检测中', skipped:'已跳过'}[s] || s;
+}
+function pill(status){
+  return `<span class="pill pill-${status}"><span class="dot"></span>${statusLabel(status)}</span>`;
+}
+
+/* ---------------- 导航 ---------------- */
+function switchView(viewName){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const navEl = document.querySelector(`.nav-item[data-view="${viewName}"]`);
+  if(navEl) navEl.classList.add('active');
+  const viewEl = document.getElementById('view-'+viewName);
+  if(viewEl) viewEl.classList.add('active');
+  if(viewName === 'reports'){ loadRuns(true); }
+  if(viewName === 'execute'){ loadRuns(false); }
+}
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click', ()=> switchView(el.dataset.view));
+});
+
+/* ---------------- 服务器 ---------------- */
+let editingServerId = null;
+
+async function loadServers(){
+  servers = await api('/api/servers');
+  const body = document.querySelector('#serverTable tbody');
+  body.innerHTML = '';
+  document.getElementById('serverEmpty').style.display = servers.length ? 'none' : 'block';
+  for(const s of servers){
+    const remark = s.remark || '-';
+    body.innerHTML += `<tr>
+      <td>
+        <span class="env-name" title="${s.name}">
+          <span class="env-dot"></span>${s.name}
+        </span>
+      </td>
+      <td>
+        <a class="env-url" href="${s.base_url}" target="_blank" rel="noopener noreferrer" title="${s.base_url}">${s.base_url}</a>
+      </td>
+      <td><span class="env-remark" title="${remark}">${remark}</span></td>
+      <td class="action-cell">
+        <button class="icon-btn edit-btn" onclick="openServerModal(${s.id})" title="编辑">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="icon-btn delete-btn" onclick="deleteServer(${s.id})" title="删除">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }
+  fillSelect('run-server', servers, s=>s.name + '（' + s.base_url + '）');
+}
+
+function openServerModal(serverId){
+  editingServerId = serverId || null;
+  const isEdit = !!serverId;
+  document.getElementById('modalBody').innerHTML = `
+    <h2 style="margin:0 0 16px 0;font-size:17px;">${isEdit ? '编辑环境' : '添加环境'}</h2>
+    <div class="form-section">
+      <div class="form-section-title">环境信息</div>
+      <div class="field"><label>环境名称</label><input id="m-srv-name" placeholder="如：测试环境、预发环境"></div>
+      <div class="field" style="margin-top:12px;"><label>环境地址 / Base URL</label><input id="m-srv-host" placeholder="如：http://172.16.10.151"></div>
+      <div class="field" style="margin-top:12px;"><label>备注（可选）</label><input id="m-srv-remark" placeholder=""></div>
+    </div>
+    <div class="form-section" style="margin-top:14px;">
+      <div class="form-section-title">登录信息（业务用例自动登录时使用）</div>
+      <div class="field-row">
+        <div class="field"><label>客户名（可选）</label><input id="m-srv-customer" placeholder="如：okcc"></div>
+        <div class="field"><label>用户名</label><input id="m-srv-username" placeholder="如：admin"></div>
+      </div>
+      <div class="field" style="margin-top:12px;"><label>密码</label><input id="m-srv-password" type="password" placeholder="登录密码"></div>
+      <div class="field" style="margin-top:12px;"><label>登录页面路径</label><input id="m-srv-loginpath" value="/#/login" placeholder="如：/#/login 或 /login"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px;">
+      <button class="btn btn-primary" onclick="saveServer()">保存</button>
+      <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+    </div>
+  `;
+  showModal();
+  if(isEdit){
+    (async () => {
+      try{
+        const s = await api(`/api/servers/${serverId}`);
+        document.getElementById('m-srv-name').value = s.name || '';
+        document.getElementById('m-srv-host').value = s.base_url || '';
+        document.getElementById('m-srv-remark').value = s.remark || '';
+        document.getElementById('m-srv-customer').value = s.customer_name || '';
+        document.getElementById('m-srv-username').value = s.username || '';
+        document.getElementById('m-srv-password').value = s.password || '';
+        document.getElementById('m-srv-loginpath').value = s.login_path || '/#/login';
+      }catch(e){ toast(e.message, 'err'); }
+    })();
+  }
+}
+
+
+async function saveServer(){
+  const name = document.getElementById('m-srv-name').value.trim();
+  const base_url = document.getElementById('m-srv-host').value.trim();
+  const remark = document.getElementById('m-srv-remark').value.trim() || null;
+  const customer_name = document.getElementById('m-srv-customer').value.trim() || null;
+  const username = document.getElementById('m-srv-username').value.trim() || null;
+  const password = document.getElementById('m-srv-password').value || null;
+  const login_path = document.getElementById('m-srv-loginpath').value.trim() || '/#/login';
+  if(!name || !base_url){ toast('请填写环境名称和环境地址', 'err'); return; }
+
+  const payload = {name, base_url, remark, customer_name, username, password, login_path};
+
+  try{
+    if(editingServerId){
+      // 编辑时密码留空表示不修改
+      if(!password) delete payload.password;
+      await api(`/api/servers/${editingServerId}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+      toast('已更新环境');
+    }else{
+      await api('/api/servers', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+      toast('已添加环境');
+    }
+    closeModal();
+    loadServers();
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+async function openServerDetail(serverId){
+  try{
+    const s = await api(`/api/servers/${serverId}`);
+    document.getElementById('modalBody').innerHTML = `
+      <h2 style="margin:0 0 4px 0;font-size:17px;">${s.name}</h2>
+      <div class="dim" style="font-size:12.5px;margin-bottom:16px;">测试环境详情</div>
+      <div class="detail-grid">
+        <div class="label">环境地址</div><div class="value mono">${s.base_url}</div>
+        <div class="label">客户名</div><div class="value">${s.customer_name || '-'}</div>
+        <div class="label">用户名</div><div class="value">${s.username || '-'}</div>
+        <div class="label">登录路径</div><div class="value mono">${s.login_path || '/#/login'}</div>
+        <div class="label">备注</div><div class="value">${s.remark || '-'}</div>
+        <div class="label">创建时间</div><div class="value">${fmtTime(s.created_at)}</div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-sm" onclick="openServerModal(${s.id})">编辑</button>
+        <button class="btn btn-sm" onclick="checkLocalEnv()">检查执行环境</button>
+        <button class="btn btn-sm btn-primary" onclick="initLocalEnv()">初始化执行环境</button>
+        <button class="btn btn-sm btn-ghost btn-danger" onclick="deleteServer(${s.id})">删除</button>
+        <button class="btn btn-sm btn-ghost" onclick="closeModal()">关闭</button>
+      </div>
+    `;
+    showModal();
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+function renderEnvResult(title, res){
+  const items = (res.items || []).map(it=>`
+    <div class="check-item ${it.ok ? 'ok' : 'fail'}">
+      <span class="check-icon">${it.ok ? '✓' : '✕'}</span>
+      <div class="check-item-body">
+        <div class="check-item-name">${it.name}</div>
+        <div class="check-item-msg">${escapeHtml(it.message)}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('modalBody').innerHTML = `
+    <h2 style="margin:0 0 4px 0;font-size:17px;">${title}</h2>
+    <div style="margin-bottom:16px;">${res.ok ? '<span class="pill pill-online">全部通过</span>' : '<span class="pill pill-offline">存在问题</span>'}</div>
+    <div class="check-result show">${items}</div>
+    <div style="margin-top:18px;"><button class="btn btn-sm btn-ghost" onclick="closeModal()">关闭</button></div>`;
+  showModal();
+}
+
+async function checkLocalEnv(){
+  toast('正在检查本机执行环境…');
+  try{
+    const res = await api('/api/servers/env-check', {method:'POST'});
+    renderEnvResult('本机执行环境检查', res);
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+async function initLocalEnv(){
+  if(!confirm('将在本机安装 Playwright 及 Chromium 浏览器（如未安装），首次可能需要几分钟。确定继续？')) return;
+  toast('正在初始化本机执行环境，请勿关闭页面…');
+  try{
+    const res = await api('/api/servers/env-init', {method:'POST'});
+    renderEnvResult('本机执行环境初始化', res);
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+async function deleteServer(id){
+  const s = servers.find(x=>x.id===id);
+  const name = s ? s.name : '该环境';
+  showConfirm(
+    `确定要删除环境「<span class="highlight-name">${name}</span>」吗？删除后不可恢复。`,
+    async () => {
+      await api(`/api/servers/${id}`, {method:'DELETE'});
+      toast('已删除');
+      loadServers();
+    }
+  );
+}
+
+/* ---------- 通用确认弹窗 ---------- */
+let _confirmCallback = null;
+function showConfirm(html, onOk, okText='删除', title='确认删除', okClass='confirm-danger-btn'){
+  document.getElementById('confirmBody').innerHTML = html;
+  document.querySelector('.confirm-title').textContent = title;
+  _confirmCallback = onOk;
+  document.getElementById('confirmOverlay').classList.add('show');
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.textContent = okText;
+  okBtn.className = okClass;
+  okBtn.onclick = async () => {
+    // 先保存回调引用，再关闭弹窗（closeConfirm 会把 _confirmCallback 置为 null）
+    const callback = _confirmCallback;
+    closeConfirm();
+    if(callback){ try{ await callback(); }catch(e){ toast(e.message, 'err'); } }
+  };
+}
+function closeConfirm(){
+  document.getElementById('confirmOverlay').classList.remove('show');
+  _confirmCallback = null;
+}
+
+/* ---------------- 用例 ---------------- */
+async function loadCases(){
+  cases = await api('/api/testcases');
+  // 更新模块筛选下拉框
+  const modules = [...new Set(cases.map(c => c.module || '未分类').filter(Boolean))];
+  const moduleFilter = document.getElementById('moduleFilter');
+  const currentValue = moduleFilter.value;
+  moduleFilter.innerHTML = '<option value="">全部模块</option>' + 
+    modules.map(m => `<option value="${m}">${m}</option>`).join('');
+  moduleFilter.value = currentValue;
+  // 更新自定义下拉组件显示值
+  const moduleFilterValue = document.getElementById('moduleFilterValue');
+  if(moduleFilterValue){
+    const opt = moduleFilter.options[moduleFilter.selectedIndex];
+    moduleFilterValue.textContent = opt ? opt.textContent : '全部模块';
+    moduleFilterValue.classList.toggle('placeholder', !currentValue);
+  }
+  // 渲染自定义下拉选项
+  renderCustomSelectOptions('moduleFilterCustom');
+  // 渲染模块分组
+  renderCaseGroups();
+  // 更新多选下拉组件显示
+  updateMultiSelectDisplay();
+  
+  // 填充执行任务页面的测试模块下拉框
+  const runModule = document.getElementById('run-module');
+  if(runModule){
+    const runModuleValue = runModule.value;
+    runModule.innerHTML = '<option value="">全部模块</option>' + 
+      modules.map(m => `<option value="${m}">${m}</option>`).join('');
+    runModule.value = runModuleValue;
+    // 更新自定义下拉组件显示值
+    const runModuleValueEl = document.getElementById('runModuleValue');
+    if(runModuleValueEl){
+      const opt = runModule.options[runModule.selectedIndex];
+      runModuleValueEl.textContent = opt ? opt.textContent : '全部模块';
+      runModuleValueEl.classList.toggle('placeholder', !runModuleValue);
+    }
+    renderCustomSelectOptions('runModuleCustom');
+  }
+}
+
+function renderCaseGroups(){
+  const container = document.getElementById('caseGroupsContainer');
+  const searchText = (document.getElementById('caseSearch')?.value || '').toLowerCase().trim();
+  const moduleFilter = document.getElementById('moduleFilter')?.value || '';
+  
+  // 筛选用例
+  let filtered = cases;
+  if(searchText){
+    filtered = filtered.filter(c => 
+      (c.name || '').toLowerCase().includes(searchText) ||
+      (c.module || '').toLowerCase().includes(searchText) ||
+      (c.description || '').toLowerCase().includes(searchText)
+    );
+  }
+  if(moduleFilter){
+    filtered = filtered.filter(c => (c.module || '未分类') === moduleFilter);
+  }
+  
+  // 按模块分组
+  const groups = {};
+  for(const c of filtered){
+    const mod = c.module || '未分类';
+    if(!groups[mod]) groups[mod] = [];
+    groups[mod].push(c);
+  }
+  
+  const moduleNames = Object.keys(groups).sort();
+  document.getElementById('caseEmpty').style.display = filtered.length ? 'none' : 'block';
+  
+  // 渲染分组
+  let html = '';
+  for(const mod of moduleNames){
+    const groupCases = groups[mod];
+    const groupId = 'group-' + mod.replace(/[^a-zA-Z0-9]/g, '-');
+    const isExpanded = document.getElementById(groupId)?.classList.contains('expanded');
+    // 模块标题层级：如果模块名包含 / 则显示为 模块 / 子模块
+    const moduleParts = mod.split('/').map(p => p.trim()).filter(Boolean);
+    const moduleTitle = moduleParts.length > 1 
+      ? `<span class="module-parent">${moduleParts[0]}</span><span class="module-sep">/</span><span class="module-child">${moduleParts.slice(1).join(' / ')}</span>`
+      : `<span class="module-single">${mod}</span>`;
+    html += `
+      <div class="case-group ${isExpanded ? 'expanded' : ''}" id="${groupId}">
+        <div class="case-group-header" onclick="toggleCaseGroup('${groupId}')">
+          <svg class="case-group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="case-group-name">${moduleTitle}</span>
+          <span class="case-group-count">${groupCases.length}</span>
+        </div>
+        <div class="case-group-body">
+          ${groupCases.map(c => {
+            return `
+              <div class="case-item">
+                <span class="case-item-name" onclick="openCase(${c.id})" title="${c.name}">${c.name}</span>
+                <div class="case-item-actions">
+                  <button class="icon-btn edit-btn" onclick="event.stopPropagation();editCase(${c.id})" title="编辑">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="icon-btn delete-btn" onclick="event.stopPropagation();deleteCase(${c.id})" title="删除">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+  // 保留空状态元素
+  html += `<div class="empty" id="caseEmpty" style="display:${filtered.length ? 'none' : 'block'};">
+    <div class="empty-icon">📋</div>
+    <div class="empty-title">${searchText || moduleFilter ? '没有找到匹配的用例' : '还没有导入任何用例'}</div>
+    <p>${searchText || moduleFilter ? '尝试调整搜索关键词或筛选条件' : '下载模板，按格式填写步骤后拖入上方区域导入'}</p>
+  </div>`;
+  container.innerHTML = html;
+}
+
+function toggleCaseGroup(groupId){
+  const group = document.getElementById(groupId);
+  if(group) group.classList.toggle('expanded');
+}
+
+function expandAllCases(){
+  document.querySelectorAll('.case-group').forEach(g => g.classList.add('expanded'));
+}
+
+function collapseAllCases(){
+  document.querySelectorAll('.case-group').forEach(g => g.classList.remove('expanded'));
+}
+
+/* ---------- 测试用例多选下拉组件 ---------- */
+let _selectedCaseIds = new Set();
+let _expandedModules = new Set();
+
+function toggleMultiSelect(){
+  const el = document.getElementById('runCaseMultiSelect');
+  if(!el) return;
+  const isOpen = el.classList.contains('open');
+  // 先关闭所有下拉框
+  document.querySelectorAll('.custom-select.open').forEach(s=> s.classList.remove('open'));
+  document.querySelectorAll('.multi-select.open').forEach(s=> s.classList.remove('open'));
+  if(!isOpen){
+    el.classList.add('open');
+    // 先显示加载状态，确保下拉框内容区域有内容
+    const listEl = document.getElementById('runCaseMultiList');
+    if(listEl) listEl.innerHTML = '<div class="multi-select-empty">加载中...</div>';
+    renderMultiSelectCases();
+  }
+}
+
+function renderMultiSelectCases(){
+  const listEl = document.getElementById('runCaseMultiList');
+  if(!listEl) return;
+  
+  // 检查cases是否有数据
+  if(!cases || !Array.isArray(cases) || cases.length === 0){
+    listEl.innerHTML = '<div class="multi-select-empty">暂无可选用例</div>';
+    if(typeof updateMultiSelectDisplay === 'function') updateMultiSelectDisplay();
+    return;
+  }
+  
+  // 获取当前选择的模块
+  const runModuleEl = document.getElementById('run-module');
+  const selectedModule = (runModuleEl && runModuleEl.value) || '';
+  
+  // 筛选用例
+  let filteredCases = cases;
+  if(selectedModule){
+    filteredCases = cases.filter(function(c){ return (c.module || '未分类') === selectedModule; });
+  }
+  
+  if(filteredCases.length === 0){
+    listEl.innerHTML = '<div class="multi-select-empty">该模块下暂无用例</div>';
+    if(typeof updateMultiSelectDisplay === 'function') updateMultiSelectDisplay();
+    return;
+  }
+  
+  // 构建用例列表HTML
+  let html = '';
+  for(let i = 0; i < filteredCases.length; i++){
+    const c = filteredCases[i];
+    const cid = c.id || 0;
+    const isSelected = (typeof _selectedCaseIds !== 'undefined') && _selectedCaseIds.has(cid);
+    const rawName = c.name || ('用例' + cid);
+    const safeName = escapeHtml(rawName);
+    
+    html += '<div class="multi-case-item' + (isSelected ? ' selected' : '') + '" onclick="toggleCaseSelect(' + cid + ')">';
+    html += '<input type="checkbox" class="multi-case-checkbox" ' + (isSelected ? 'checked' : '') + ' onclick="event.stopPropagation();toggleCaseSelect(' + cid + ')">';
+    html += '<span class="multi-case-name" title="' + safeName + '">' + safeName + '</span>';
+    html += '</div>';
+  }
+  
+  listEl.innerHTML = html;
+  if(typeof updateMultiSelectDisplay === 'function') updateMultiSelectDisplay();
+}
+
+function onRunModuleChange(){
+  // 模块变化时，清空已选用例（因为用例列表变了）
+  _selectedCaseIds.clear();
+  renderMultiSelectCases();
+}
+
+function toggleModuleExpand(mod){
+  if(_expandedModules.has(mod)){
+    _expandedModules.delete(mod);
+  }else{
+    _expandedModules.add(mod);
+  }
+  renderMultiSelectCases();
+}
+
+function toggleModuleSelect(mod, checked){
+  const moduleCases = cases.filter(c => (c.module || '未分类') === mod);
+  for(const c of moduleCases){
+    if(checked){
+      _selectedCaseIds.add(c.id);
+    }else{
+      _selectedCaseIds.delete(c.id);
+    }
+  }
+  renderMultiSelectCases();
+}
+
+function toggleCaseSelect(caseId){
+  if(_selectedCaseIds.has(caseId)){
+    _selectedCaseIds.delete(caseId);
+  }else{
+    _selectedCaseIds.add(caseId);
+  }
+  renderMultiSelectCases();
+}
+
+function toggleSelectAllCases(checked){
+  // 获取当前选择的模块
+  const selectedModule = document.getElementById('run-module')?.value || '';
+  
+  // 筛选当前模块下的用例
+  let filteredCases = cases;
+  if(selectedModule){
+    filteredCases = cases.filter(c => (c.module || '未分类') === selectedModule);
+  }
+  
+  if(checked){
+    for(const c of filteredCases){
+      _selectedCaseIds.add(c.id);
+    }
+  }else{
+    // 只取消当前筛选后的用例的选中状态
+    for(const c of filteredCases){
+      _selectedCaseIds.delete(c.id);
+    }
+  }
+  renderMultiSelectCases();
+}
+
+function updateMultiSelectDisplay(){
+  const valueEl = document.getElementById('runCaseMultiValue');
+  const countEl = document.getElementById('runCaseSelectedCount');
+  const checkAllEl = document.getElementById('runCaseCheckAll');
+  
+  const count = _selectedCaseIds.size;
+  
+  if(countEl){
+    countEl.textContent = '已选 ' + count + ' 个';
+  }
+  
+  if(checkAllEl){
+    // 计算当前筛选后的用例数量
+    const runModuleEl = document.getElementById('run-module');
+    const selectedModule = (runModuleEl && runModuleEl.value) || '';
+    let filteredCases = cases;
+    if(selectedModule){
+      filteredCases = cases.filter(function(c){ return (c.module || '未分类') === selectedModule; });
+    }
+    const filteredCount = filteredCases.length;
+    const selectedInFiltered = filteredCases.filter(function(c){ return _selectedCaseIds.has(c.id); }).length;
+    
+    checkAllEl.checked = count > 0 && selectedInFiltered === filteredCount;
+    checkAllEl.indeterminate = selectedInFiltered > 0 && selectedInFiltered < filteredCount;
+  }
+  
+  if(valueEl){
+    if(count === 0){
+      valueEl.textContent = '请选择测试用例';
+      valueEl.classList.add('placeholder');
+    }else if(count === 1){
+      // 选择1个用例，显示用例名称
+      const selectedCase = cases.find(function(c){ return _selectedCaseIds.has(c.id); });
+      valueEl.textContent = selectedCase ? selectedCase.name : '已选择 1 个用例';
+      valueEl.classList.remove('placeholder');
+    }else{
+      // 选择多个用例，显示数量
+      valueEl.textContent = '已选择 ' + count + ' 个用例';
+      valueEl.classList.remove('placeholder');
+    }
+  }
+}
+
+function getSelectedCaseIds(){
+  return Array.from(_selectedCaseIds);
+}
+
+// 点击外部关闭多选下拉框
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.multi-select')){
+    document.querySelectorAll('.multi-select.open').forEach(s=> s.classList.remove('open'));
+  }
+});
+
+function fillSelect(id, list, labelFn){
+  const sel = document.getElementById(id);
+  sel.innerHTML = list.map(x=>`<option value="${x.id}">${labelFn(x)}</option>`).join('') || '<option value="">暂无</option>';
+  // 如果该 select 有对应的自定义下拉组件，同步渲染选项
+  const customEl = document.querySelector(`.custom-select[data-native="${id}"]`);
+  if(customEl){
+    renderCustomSelectOptions(customEl.id);
+  }
+}
+
+/* ---------- 自定义下拉组件（通用） ---------- */
+function toggleCustomSelect(selectId){
+  const el = document.getElementById(selectId);
+  if(!el) return;
+  const isOpen = el.classList.contains('open');
+  // 先关闭所有下拉框
+  document.querySelectorAll('.custom-select.open').forEach(s=> s.classList.remove('open'));
+  if(!isOpen){
+    el.classList.add('open');
+  }
+}
+
+function renderCustomSelectOptions(selectId){
+  const container = document.getElementById(selectId);
+  if(!container) return;
+  const nativeId = container.dataset.native;
+  const nativeSelect = document.getElementById(nativeId);
+  const optionsContainer = container.querySelector('.custom-select-options');
+  const valueDisplay = container.querySelector('.custom-select-value');
+  if(!nativeSelect || !optionsContainer || !valueDisplay) return;
+
+  const selectedValue = nativeSelect.value;
+  const hasSelection = selectedValue && selectedValue !== '';
+
+  // 更新显示值
+  if(hasSelection){
+    const opt = nativeSelect.options[nativeSelect.selectedIndex];
+    valueDisplay.textContent = opt ? opt.textContent : '';
+    valueDisplay.classList.remove('placeholder');
+  }else{
+    valueDisplay.classList.add('placeholder');
+  }
+
+  // 渲染选项
+  optionsContainer.innerHTML = Array.from(nativeSelect.options).map(opt=>{
+    const isSelected = opt.value === selectedValue && opt.value !== '';
+    return `<div class="custom-select-option${isSelected ? ' selected' : ''}" data-value="${opt.value}" onclick="selectCustomOption('${selectId}','${opt.value}')">${opt.textContent}</div>`;
+  }).join('');
+}
+
+function selectCustomOption(selectId, value){
+  const container = document.getElementById(selectId);
+  if(!container) return;
+  const nativeId = container.dataset.native;
+  const nativeSelect = document.getElementById(nativeId);
+  const valueDisplay = container.querySelector('.custom-select-value');
+  if(!nativeSelect || !valueDisplay) return;
+
+  nativeSelect.value = value;
+  const opt = nativeSelect.options[nativeSelect.selectedIndex];
+  valueDisplay.textContent = opt ? opt.textContent : '';
+  valueDisplay.classList.toggle('placeholder', !value || value === '');
+
+  // 关闭下拉框
+  document.querySelectorAll('.custom-select.open').forEach(s=> s.classList.remove('open'));
+  // 更新选项选中状态
+  renderCustomSelectOptions(selectId);
+
+  // 如果是执行报告的筛选下拉框，触发筛选（带防抖）
+  if(['filterTime','filterEnv','filterBrowser'].includes(nativeId)){
+    applyFiltersDebounced();
+  }
+  // 如果是测试用例页面的模块筛选，触发重新渲染
+  if(nativeId === 'moduleFilter'){
+    renderCaseGroups();
+  }
+  // 如果是执行任务页面的测试模块选择，触发用例列表更新
+  if(nativeId === 'run-module'){
+    onRunModuleChange();
+  }
+}
+
+// 筛选防抖：连续操作合并为一次执行，避免重复渲染
+let _filterTimer = null;
+function applyFiltersDebounced(){
+  if(_filterTimer) clearTimeout(_filterTimer);
+  _filterTimer = setTimeout(()=>{
+    applyFilters();
+  }, 120);
+}
+
+// 页面加载完成后，初始化所有自定义下拉组件的选项渲染
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('.custom-select').forEach(el=>{
+    renderCustomSelectOptions(el.id);
+  });
+});
+
+// 点击外部关闭下拉框
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.custom-select')){
+    document.querySelectorAll('.custom-select.open').forEach(s=> s.classList.remove('open'));
+  }
+});
+async function deleteCase(id){
+  const c = cases.find(x=>x.id===id);
+  const name = c ? c.name : '该用例';
+  showConfirm(
+    `确定要删除用例「<span class="highlight-name">${name}</span>」吗？删除后不可恢复。`,
+    async () => {
+      await api(`/api/testcases/${id}`, {method:'DELETE'});
+      toast('已删除');
+      loadCases();
+    }
+  );
+}
+const ACTION_LABEL = {
+  open:"打开", open_url:"打开", navigate:"打开", goto:"打开",
+  input:"输入", type:"输入", fill:"输入", send_keys:"输入",
+  click:"点击", click_button:"点击", click_link:"点击",
+  assert:"校验", assert_text:"校验", verify:"校验", check:"校验",
+  select:"选择", choose:"选择",
+  hover:"悬停", mouse_over:"悬停",
+  sleep:"等待", wait:"等待", delay:"等待",
+  refresh:"刷新", reload:"刷新",
+  go_back:"返回", back:"返回",
+  screenshot:"截图", capture:"截图",
+  scroll_to:"滚动", scroll:"滚动",
+  press_key:"按键", key:"按键",
+  switch_to_frame:"切换iframe", frame:"切换iframe",
+  switch_to_default:"切回主文档", default_content:"切回主文档",
+  clear:"清空",
+  assert_title:"校验标题", verify_title:"校验标题",
+  assert_element_exists:"校验元素存在", assert_element_not_exists:"校验元素不存在",
+  wait_for_element:"等待元素",
+};
+// 下拉框唯一操作选项（避免别名导致重复）
+const ACTION_CHOICES = [
+  {value:'open_url', label:'打开'},
+  {value:'input', label:'输入'},
+  {value:'click', label:'点击'},
+  {value:'assert_text', label:'校验'},
+  {value:'select', label:'选择'},
+  {value:'hover', label:'悬停'},
+  {value:'sleep', label:'等待'},
+  {value:'refresh', label:'刷新'},
+  {value:'go_back', label:'返回'},
+  {value:'screenshot', label:'截图'},
+  {value:'scroll_to', label:'滚动'},
+  {value:'press_key', label:'按键'},
+  {value:'switch_to_frame', label:'切换iframe'},
+  {value:'switch_to_default', label:'切回主文档'},
+  {value:'clear', label:'清空'},
+  {value:'assert_title', label:'校验标题'},
+  {value:'assert_element_exists', label:'校验元素存在'},
+  {value:'assert_element_not_exists', label:'校验元素不存在'},
+  {value:'wait_for_element', label:'等待元素'},
+];
+async function openCase(id){
+  const c = await api(`/api/testcases/${id}`);
+  const rows = c.steps.map(s=>`<tr>
+    <td><span class="step-badge">${s.step_order}</span></td>
+    <td><span class="action-tag">${ACTION_LABEL[s.action] || s.action}</span></td>
+    <td>${s.target || '-'}</td>
+    <td>${s.input_value || '-'}</td>
+    <td>${s.expected_result || '-'}</td>
+  </tr>`).join('');
+  const loginModeLabel = {auto:'自动登录', none:'不登录', reuse:'复用登录状态'};
+  const loginMode = c.login_mode || 'auto';
+  document.getElementById('modalBody').innerHTML = `
+    <h2 style="margin:0 0 4px 0;font-size:17px;">${c.name}</h2>
+    <div class="dim" style="font-size:12.5px;margin-bottom:12px;">${c.module || '未分类'} ${c.description ? ' · ' + c.description : ''}</div>
+    <div style="margin-bottom:14px;"><span class="action-tag">登录模式：${loginModeLabel[loginMode] || loginMode}</span></div>
+    <table class="steps-table">
+      <thead><tr><th>#</th><th>操作</th><th>操作对象</th><th>输入值</th><th>期望结果</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" class="dim">无步骤</td></tr>'}</tbody>
+    </table>`;
+  showModal();
+}
+function downloadTemplate(){ window.open('/api/testcases/template', '_blank'); }
+
+let editingCaseId = null;
+
+function _actionOptions(selected){
+  return ACTION_CHOICES.map(({value, label})=>
+    `<option value="${value}"${value===selected?' selected':''}>${label}</option>`
+  ).join('');
+}
+
+function _stepCardHtml(step, idx){
+  return `
+  <div class="step-card" data-idx="${idx}">
+    <div class="step-card-head">
+      <span class="step-num">${idx+1}</span>
+      <span class="step-card-title">步骤 ${idx+1}</span>
+      <div class="step-card-tools">
+        <button class="step-icon-btn" onclick="moveStepUp(this)" title="上移">↑</button>
+        <button class="step-icon-btn" onclick="moveStepDown(this)" title="下移">↓</button>
+        <button class="step-icon-btn" onclick="copyStep(this)" title="复制">⎘</button>
+        <button class="step-icon-btn danger" onclick="removeStepRow(this)" title="删除">✕</button>
+      </div>
+    </div>
+    <div class="step-fields">
+      <div class="step-field-row">
+        <div class="step-field action-field">
+          <label>操作</label>
+          <select class="step-action">${_actionOptions(step.action)}</select>
+        </div>
+        <div class="step-field">
+          <label>操作对象（自然语言描述）</label>
+          <input type="text" class="step-target" value="${escapeHtml(step.target||'')}" placeholder="如：用户名输入框、登录按钮">
+        </div>
+      </div>
+      <div class="step-field-row">
+        <div class="step-field">
+          <label>输入值</label>
+          <input type="text" class="step-input" value="${escapeHtml(step.input_value||'')}" placeholder="打开页面填URL，输入填内容">
+        </div>
+        <div class="step-field">
+          <label>预期结果</label>
+          <input type="text" class="step-expected" value="${escapeHtml(step.expected_result||'')}" placeholder="如：登录成功，进入首页">
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renumberSteps(){
+  document.querySelectorAll('#step-cards .step-card').forEach((card, i)=>{
+    card.querySelector('.step-num').textContent = i + 1;
+    card.querySelector('.step-card-title').textContent = `步骤 ${i+1}`;
+    // 更新上移/下移按钮的禁用状态
+    const btns = card.querySelectorAll('.step-icon-btn');
+    btns[0].disabled = (i === 0);  // 上移
+    btns[1].disabled = (i === document.querySelectorAll('#step-cards .step-card').length - 1);  // 下移
+  });
+}
+
+async function editCase(id){
+  editingCaseId = id;
+  const c = await api(`/api/testcases/${id}`);
+  const cards = c.steps.map((s, idx)=>_stepCardHtml(s, idx)).join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    <h2 class="modal-title">编辑用例</h2>
+    <div style="margin-bottom:18px;">
+      <div class="edit-section-title">基本信息</div>
+      <div class="step-fields">
+        <div class="step-field">
+          <label>用例名称</label>
+          <input id="edit-name" value="${escapeHtml(c.name)}" placeholder="如：登录成功">
+        </div>
+        <div class="step-field-row">
+          <div class="step-field">
+            <label>所属模块</label>
+            <input id="edit-module" value="${escapeHtml(c.module||'')}" placeholder="如：登录">
+          </div>
+          <div class="step-field">
+            <label>用例描述</label>
+            <input id="edit-desc" value="${escapeHtml(c.description||'')}" placeholder="可选">
+          </div>
+        </div>
+        <div class="step-field">
+          <label>登录模式</label>
+          <select id="edit-login-mode">
+            <option value="auto"${c.login_mode==='auto'?' selected':''}>自动登录（默认，业务用例执行前自动登录）</option>
+            <option value="none"${c.login_mode==='none'?' selected':''}>不登录（登录模块本身的测试，从登录页直接开始）</option>
+            <option value="reuse"${c.login_mode==='reuse'?' selected':''}>复用登录状态（连续执行多个用例时复用）</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:18px;">
+      <div class="edit-section-title">测试步骤 <span style="font-weight:400;color:var(--text-dim);font-size:12px;">（描述做什么、操作什么、期望什么，元素定位由 Playwright 自动识别）</span></div>
+      <div id="step-cards">${cards}</div>
+      <button class="add-step-btn" onclick="addStepRow()">+ 添加步骤</button>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn btn-sm btn-primary" onclick="saveCaseEdit()">保存</button>
+    </div>`;
+  showModal();
+  renumberSteps();
+}
+
+function createCase(){
+  editingCaseId = null;
+  // 默认一个空步骤
+  const defaultStep = _stepCardHtml({action:'click', target:'', input_value:'', expected_result:''}, 0);
+
+  document.getElementById('modalBody').innerHTML = `
+    <h2 class="modal-title">新增用例</h2>
+    <div style="margin-bottom:18px;">
+      <div class="edit-section-title">基本信息</div>
+      <div class="step-fields">
+        <div class="step-field">
+          <label>用例名称</label>
+          <input id="edit-name" value="" placeholder="如：登录成功">
+        </div>
+        <div class="step-field-row">
+          <div class="step-field">
+            <label>所属模块</label>
+            <input id="edit-module" value="" placeholder="如：登录">
+          </div>
+          <div class="step-field">
+            <label>用例描述</label>
+            <input id="edit-desc" value="" placeholder="可选">
+          </div>
+        </div>
+        <div class="step-field">
+          <label>登录模式</label>
+          <select id="edit-login-mode">
+            <option value="auto" selected>自动登录（默认，业务用例执行前自动登录）</option>
+            <option value="none">不登录（登录模块本身的测试，从登录页直接开始）</option>
+            <option value="reuse">复用登录状态（连续执行多个用例时复用）</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:18px;">
+      <div class="edit-section-title">测试步骤 <span style="font-weight:400;color:var(--text-dim);font-size:12px;">（描述做什么、操作什么、期望什么，元素定位由 Playwright 自动识别）</span></div>
+      <div id="step-cards">${defaultStep}</div>
+      <button class="add-step-btn" onclick="addStepRow()">+ 添加步骤</button>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn btn-sm btn-primary" onclick="saveCaseCreate()">保存</button>
+    </div>`;
+  showModal();
+  renumberSteps();
+}
+
+async function saveCaseCreate(){
+  const name = document.getElementById('edit-name').value.trim();
+  const module = document.getElementById('edit-module').value.trim();
+  const description = document.getElementById('edit-desc').value.trim();
+  const login_mode = document.getElementById('edit-login-mode').value;
+  if(!name){ toast('请填写用例名称', 'err'); return; }
+
+  const steps = [];
+  document.querySelectorAll('#step-cards .step-card').forEach((card, i)=>{
+    steps.push({
+      step_order: i + 1,
+      action: card.querySelector('.step-action').value,
+      target: card.querySelector('.step-target').value.trim() || null,
+      input_value: card.querySelector('.step-input').value.trim() || null,
+      expected_result: card.querySelector('.step-expected').value.trim() || null,
+    });
+  });
+  if(steps.length === 0){ toast('至少需要一个测试步骤', 'err'); return; }
+
+  try{
+    await api('/api/testcases', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, module, description, login_mode, steps})
+    });
+    toast('用例新增成功');
+    closeModal();
+    loadCases();
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+function addStepRow(){
+  const container = document.getElementById('step-cards');
+  const idx = container.querySelectorAll('.step-card').length;
+  const div = document.createElement('div');
+  div.innerHTML = _stepCardHtml({action:'click', target:'', input_value:'', expected_result:''}, idx);
+  container.appendChild(div.firstElementChild);
+  renumberSteps();
+}
+
+function removeStepRow(btn){
+  const card = btn.closest('.step-card');
+  card.remove();
+  renumberSteps();
+}
+
+function moveStepUp(btn){
+  const card = btn.closest('.step-card');
+  const prev = card.previousElementSibling;
+  if(prev){
+    card.parentNode.insertBefore(card, prev);
+    renumberSteps();
+  }
+}
+
+function moveStepDown(btn){
+  const card = btn.closest('.step-card');
+  const next = card.nextElementSibling;
+  if(next){
+    card.parentNode.insertBefore(next, card);
+    renumberSteps();
+  }
+}
+
+function copyStep(btn){
+  const card = btn.closest('.step-card');
+  const clone = card.cloneNode(true);
+  // 复制输入框的值（cloneNode 不会复制用户输入的值）
+  const origInputs = card.querySelectorAll('input, select');
+  const cloneInputs = clone.querySelectorAll('input, select');
+  origInputs.forEach((inp, i)=>{
+    if(inp.type === 'checkbox' || inp.type === 'radio'){
+      cloneInputs[i].checked = inp.checked;
+    } else {
+      cloneInputs[i].value = inp.value;
+    }
+  });
+  card.parentNode.insertBefore(clone, card.nextSibling);
+  renumberSteps();
+}
+
+async function saveCaseEdit(){
+  const name = document.getElementById('edit-name').value.trim();
+  const module = document.getElementById('edit-module').value.trim();
+  const description = document.getElementById('edit-desc').value.trim();
+  const login_mode = document.getElementById('edit-login-mode').value;
+  if(!name){ toast('请填写用例名称', 'err'); return; }
+
+  const steps = [];
+  document.querySelectorAll('#step-cards .step-card').forEach((card, i)=>{
+    steps.push({
+      step_order: i + 1,
+      action: card.querySelector('.step-action').value,
+      target: card.querySelector('.step-target').value.trim() || null,
+      input_value: card.querySelector('.step-input').value.trim() || null,
+      expected_result: card.querySelector('.step-expected').value.trim() || null,
+    });
+  });
+  if(steps.length === 0){ toast('至少需要一个测试步骤', 'err'); return; }
+
+  try{
+    await api(`/api/testcases/${editingCaseId}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, module, description, login_mode, steps})
+    });
+    toast('用例已更新');
+    closeModal();
+    loadCases();
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+const fileInput = document.getElementById('fileInput');
+const dropzone = document.getElementById('dropzone');
+fileInput.addEventListener('change', e=>{ if(e.target.files[0]) uploadFile(e.target.files[0]); });
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.style.borderColor='var(--accent)'; });
+dropzone.addEventListener('dragleave', ()=>{ dropzone.style.borderColor='var(--border)'; });
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.style.borderColor='var(--border)';
+  if(e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]);
+});
+async function uploadFile(file){
+  document.getElementById('dz-text').textContent = '正在导入 ' + file.name + ' …';
+  const fd = new FormData(); fd.append('file', file);
+  try{
+    const res = await api('/api/testcases/import', {method:'POST', body: fd});
+    document.getElementById('dz-text').textContent = '点击选择 Excel 文件（.xlsx），或拖拽到此处';
+    let msg = `成功导入 ${res.imported_cases} 个用例，共 ${res.imported_steps} 个步骤`;
+    toast(msg);
+    if(res.warnings.length) console.warn('导入警告:', res.warnings);
+    loadCases();
+  }catch(e){
+    document.getElementById('dz-text').textContent = '点击选择 Excel 文件（.xlsx），或拖拽到此处';
+    toast(e.message, 'err');
+  }
+  fileInput.value = '';
+}
+
+/* ---------------- 执行 ---------------- */
+async function triggerRun(){
+  const selectedIds = getSelectedCaseIds();
+  const server_id = parseInt(document.getElementById('run-server').value);
+  const browser = document.getElementById('run-browser').value;
+  const headless = document.querySelector('input[name="run-mode"]:checked').value === 'headless';
+  
+  if(!selectedIds.length){ toast('请先选择测试用例', 'err'); return; }
+  if(!server_id){ toast('请先选择测试环境', 'err'); return; }
+  
+  // 收集确认信息
+  const server = servers.find(s=>s.id===server_id);
+  const selectedCases = cases.filter(c=>selectedIds.includes(c.id));
+  const modules = [...new Set(selectedCases.map(c=>c.module || '未分类'))];
+  const browserLabel = {chromium:'Chromium', chrome:'Chrome', edge:'Edge'}[browser] || browser;
+  const modeLabel = headless ? '无头模式' : '有头模式';
+  
+  // 显示执行确认
+  const confirmHtml = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:14px;font-weight:600;color:#1f2937;margin-bottom:12px;">本次执行配置</div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:10px 16px;font-size:13px;">
+        <div style="color:#6b7280;">用例数量</div>
+        <div style="color:#1f2937;font-weight:500;">${selectedIds.length} 个用例</div>
+        <div style="color:#6b7280;">涉及模块</div>
+        <div style="color:#1f2937;font-weight:500;">${modules.join('、')}（${modules.length} 个）</div>
+        <div style="color:#6b7280;">测试环境</div>
+        <div style="color:#1f2937;font-weight:500;">${server ? server.name + '（' + server.base_url + '）' : '#'+server_id}</div>
+        <div style="color:#6b7280;">浏览器</div>
+        <div style="color:#1f2937;font-weight:500;">${browserLabel}</div>
+        <div style="color:#6b7280;">执行模式</div>
+        <div style="color:#1f2937;font-weight:500;">${modeLabel}</div>
+      </div>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#166534;">
+      点击「开始执行」后，将依次执行选中的用例，执行过程可在下方实时查看。
+    </div>
+  `;
+  
+  showConfirm(confirmHtml, async () => {
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true; btn.textContent = '正在启动…';
+    try{
+      await api('/api/runs/batch', {
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body: JSON.stringify({test_case_ids: selectedIds, server_id, browser, headless})
+      });
+      toast(headless ? `已开始无头模式执行 ${selectedIds.length} 个用例` : `已开始执行 ${selectedIds.length} 个用例，可在下方查看进度`);
+      loadRuns(false);
+    }catch(e){ toast(e.message, 'err'); }
+    btn.disabled = false; btn.textContent = '开始执行';
+  }, '开始执行', '确认执行', 'confirm-primary-btn');
+}
+
+// 保存刷新前的选中ID，避免定时刷新导致勾选状态丢失
+let _preservedSelectedIds = [];
+
+async function loadRuns(full){
+  // 刷新前保存当前选中的ID
+  if(typeof getSelectedRunIds === 'function'){
+    _preservedSelectedIds = getSelectedRunIds();
+  }
+  runs = await api('/api/runs?limit=200');
+  const caseName = id => (cases.find(c=>c.id===id) || {}).name || ('#'+id);
+  const serverName = id => (servers.find(s=>s.id===id) || {}).name || ('#'+id);
+
+  // ---------- 执行任务页：当前执行中 + 最近执行 ----------
+  if(document.getElementById('runningList')){
+    renderRunningBoard(runs, caseName, serverName);
+  }
+  if(document.getElementById('recentRunsBody')){
+    const recent = runs.slice(0, 8);
+    document.getElementById('recentRunsBody').innerHTML = recent.map(r=>`<tr style="cursor:pointer;" onclick="openRun(${r.id})">
+      <td class="dim">#${r.id}</td>
+      <td><span class="case-name" title="${caseName(r.test_case_id)}">${caseName(r.test_case_id)}</span></td>
+      <td class="dim">${serverName(r.server_id)}</td>
+      <td>${pill(r.status)}</td>
+      <td class="dim">${durationOf(r)}</td>
+      <td class="dim">${fmtTime(r.start_time || r.created_at)}</td>
+    </tr>`).join('');
+    document.getElementById('recentEmpty').style.display = recent.length ? 'none' : 'block';
+  }
+
+  // ---------- 执行报告页：统计 + 筛选列表 ----------
+  if(full && document.getElementById('allRunsBody')){
+    populateEnvFilter();
+    renderStats(runs);
+    applyFilters();
+  }
+
+  // 侧边栏运行中徽章
+  const runningCount = runs.filter(r=>r.status==='running' || r.status==='pending').length;
+  document.getElementById('runningBadge').style.display = runningCount ? 'flex' : 'none';
+  document.getElementById('runningCount').textContent = runningCount;
+}
+
+/* ---------- 当前执行中看板 ---------- */
+function renderRunningBoard(runList, caseName, serverName){
+  const running = runList.filter(r=>r.status==='running' || r.status==='pending');
+  const board = document.getElementById('runningBoard');
+  const list = document.getElementById('runningList');
+  if(!board || !list) return;
+
+  if(running.length === 0){
+    board.style.display = 'none';
+    return;
+  }
+  board.style.display = 'block';
+  list.innerHTML = running.map(r=>{
+    const elapsed = elapsedTime(r);
+    const progress = r.status === 'pending' ? 5 : Math.min(95, 30 + (parseFloat(elapsed) || 0) * 2);
+    return `<div class="running-item">
+      <div class="running-info">
+        <div class="running-name" title="${caseName(r.test_case_id)}">${caseName(r.test_case_id)}</div>
+        <div class="running-meta">
+          <span>${serverName(r.server_id)}</span>
+          <span>${r.status === 'pending' ? '等待中...' : '执行中...'}</span>
+          <span>已运行 ${elapsed}</span>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+        <div class="progress-text">${r.status === 'pending' ? '排队中' : progress.toFixed(0) + '%'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function elapsedTime(r){
+  if(!r.start_time) return '0s';
+  const start = new Date(r.start_time + 'Z');
+  const now = new Date();
+  const ms = now - start;
+  if(ms < 0) return '0s';
+  const s = Math.floor(ms / 1000);
+  if(s < 60) return s + 's';
+  const m = Math.floor(s / 60);
+  return m + 'm' + (s % 60) + 's';
+}
+
+/* ---------- 统计概览 ---------- */
+function renderStats(runList){
+  const total = runList.length;
+  const passed = runList.filter(r=>r.status==='passed').length;
+  const failed = runList.filter(r=>r.status==='failed' || r.status==='error').length;
+  const completed = runList.filter(r=>r.start_time && r.end_time);
+  const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : '0.0';
+
+  // 平均耗时
+  let avgTime = '-';
+  if(completed.length > 0){
+    const totalMs = completed.reduce((sum, r)=> sum + (new Date(r.end_time+'Z') - new Date(r.start_time+'Z')), 0);
+    const avgMs = totalMs / completed.length;
+    avgTime = (avgMs / 1000).toFixed(1) + 's';
+  }
+
+  // 今日失败数
+  const today = new Date().toISOString().slice(0, 10);
+  const todayFail = runList.filter(r=>{
+    const d = (r.start_time || r.created_at || '').slice(0, 10);
+    return d === today && (r.status==='failed' || r.status==='error');
+  }).length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPassRate').textContent = passRate + '%';
+  document.getElementById('statPassSub').textContent = `${passed} 通过 / ${total} 总数`;
+  document.getElementById('statAvgTime').textContent = avgTime;
+  document.getElementById('statTodayFail').textContent = todayFail;
+}
+
+/* ---------- 筛选 ---------- */
+let currentStatusFilter = 'all';
+
+function populateEnvFilter(){
+  const sel = document.getElementById('filterEnv');
+  if(!sel || sel.options.length > 1) return;
+  servers.forEach(s=>{
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name;
+    sel.appendChild(opt);
+  });
+  // 填充后渲染自定义下拉选项
+  const customEl = document.querySelector('.custom-select[data-native="filterEnv"]');
+  if(customEl) renderCustomSelectOptions(customEl.id);
+}
+
+function applyStatusFilter(status){
+  currentStatusFilter = status;
+  document.querySelectorAll('.status-btn').forEach(el=>{
+    el.classList.toggle('active', el.dataset.status === status);
+  });
+  applyFilters();
+}
+
+function toggleMoreFilters(){
+  const panel = document.getElementById('moreFilters');
+  const btn = document.getElementById('moreFilterBtn');
+  const arrow = btn.querySelector('.filter-btn-arrow');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'flex';
+  if(arrow) arrow.textContent = isOpen ? '▾' : '▴';
+}
+
+function toggleSearchClear(){
+  const val = document.getElementById('filterSearch').value;
+  document.getElementById('searchClearBtn').style.display = val ? 'flex' : 'none';
+}
+
+function clearSearch(){
+  document.getElementById('filterSearch').value = '';
+  document.getElementById('searchClearBtn').style.display = 'none';
+  applyFilters();
+}
+
+function applyFilters(){
+  if(!document.getElementById('allRunsBody')) return;
+
+  // 提前构建 id -> 名称映射表（O(1) 查找，替代每次 filter 中的 find()）
+  const caseMap = {};
+  cases.forEach(c=>{ caseMap[c.id] = c.name; });
+  const serverMap = {};
+  servers.forEach(s=>{ serverMap[s.id] = s.name; });
+  const getCaseName = id => caseMap[id] || ('#'+id);
+  const getServerName = id => serverMap[id] || ('#'+id);
+
+  // 筛选条件（一次性读取，避免循环中重复查询 DOM）
+  const timeFilter = document.getElementById('filterTime')?.value || 'all';
+  const envFilter = document.getElementById('filterEnv')?.value || 'all';
+  const browserFilter = document.getElementById('filterBrowser')?.value || 'all';
+  const searchText = document.getElementById('filterSearch').value.toLowerCase().trim();
+  const statusFilter = currentStatusFilter;
+
+  // 预计算日期（只算一次）
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  // 预计算浏览器显示名称
+  const browserDisplay = b => {
+    const browser = b || 'chromium';
+    return browser.charAt(0).toUpperCase() + browser.slice(1);
+  };
+
+  // 筛选（纯数据判断，不做名称查找，最快路径优先）
+  const filtered = [];
+  for(let i = 0; i < runs.length; i++){
+    const r = runs[i];
+    const d = (r.start_time || r.created_at || '').slice(0, 10);
+
+    // 状态筛选（最快判断，优先排除）
+    if(statusFilter === 'passed' && r.status !== 'passed') continue;
+    if(statusFilter === 'failed' && r.status !== 'failed' && r.status !== 'error') continue;
+
+    // 时间范围筛选
+    if(timeFilter === 'today' && d !== todayStr) continue;
+    if(timeFilter === '7days' && d < weekAgo) continue;
+    if(timeFilter === '30days' && d < monthAgo) continue;
+
+    // 环境筛选
+    if(envFilter !== 'all' && String(r.server_id) !== String(envFilter)) continue;
+
+    // 浏览器筛选
+    if(browserFilter !== 'all' && (r.browser || 'chromium') !== browserFilter) continue;
+
+    // 搜索（最后做，因为需要查找名称）
+    if(searchText && !getCaseName(r.test_case_id).toLowerCase().includes(searchText)) continue;
+
+    filtered.push(r);
+  }
+
+  const body = document.getElementById('allRunsBody');
+  const MAX_RENDER = 300; // 最多渲染 300 条，避免大数据量卡顿
+
+  if(filtered.length === 0){
+    body.innerHTML = '';
+    document.getElementById('reportsEmpty').style.display = 'block';
+    document.getElementById('reportsEmpty').querySelector('.empty-title').textContent = '没有符合筛选条件的报告';
+    document.getElementById('reportsEmpty').querySelector('p').textContent = '尝试调整筛选条件或重置筛选';
+  }else{
+    document.getElementById('reportsEmpty').style.display = 'none';
+    // 只渲染前 MAX_RENDER 条，超出部分提示
+    const renderList = filtered.slice(0, MAX_RENDER);
+    let html = '';
+    for(let i = 0; i < renderList.length; i++){
+      const r = renderList[i];
+      html += `<tr style="cursor:pointer;">
+        <td onclick="event.stopPropagation()" style="text-align:center;"><input type="checkbox" class="run-checkbox" value="${r.id}" onchange="updateSelectedCount()" style="accent-color:var(--accent);cursor:pointer;width:15px;height:15px;"></td>
+        <td class="dim" onclick="openRun(${r.id})">#${r.id}</td>
+        <td onclick="openRun(${r.id})"><span class="case-name" title="${getCaseName(r.test_case_id)}">${getCaseName(r.test_case_id)}</span></td>
+        <td class="dim" onclick="openRun(${r.id})">${getServerName(r.server_id)}</td>
+        <td class="dim" onclick="openRun(${r.id})">${browserDisplay(r.browser)}</td>
+        <td onclick="openRun(${r.id})">${pill(r.status)}</td>
+        <td class="dim" onclick="openRun(${r.id})">${durationOf(r)}</td>
+        <td class="dim" onclick="openRun(${r.id})">${fmtTime(r.start_time || r.created_at)}</td>
+        <td class="action-cell" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="openRun(${r.id})">查看</button></td>
+      </tr>`;
+    }
+    // 如果超出渲染上限，添加提示行
+    if(filtered.length > MAX_RENDER){
+      html += `<tr><td colspan="9" style="text-align:center;padding:14px;color:#6b7280;font-size:13px;background:#f9fafb;">
+        共 ${filtered.length} 条记录，仅显示前 ${MAX_RENDER} 条，请使用搜索或筛选缩小范围
+      </td></tr>`;
+    }
+    body.innerHTML = html;
+  }
+  // 恢复刷新前的勾选状态（避免定时刷新导致勾选丢失）
+  if(_preservedSelectedIds.length > 0){
+    document.querySelectorAll('.run-checkbox').forEach(cb=>{
+      if(_preservedSelectedIds.includes(parseInt(cb.value))){
+        cb.checked = true;
+      }
+    });
+  }
+  updateSelectedCount();
+}
+
+function resetFilters(){
+  // 重置状态按钮组
+  currentStatusFilter = 'all';
+  document.querySelectorAll('.status-btn').forEach(el=> el.classList.toggle('active', el.dataset.status === 'all'));
+  // 重置时间范围
+  const timeEl = document.getElementById('filterTime');
+  if(timeEl) timeEl.value = 'all';
+  // 重置环境
+  const envEl = document.getElementById('filterEnv');
+  if(envEl) envEl.value = 'all';
+  // 重置浏览器
+  const browserEl = document.getElementById('filterBrowser');
+  if(browserEl) browserEl.value = 'all';
+  // 重置搜索
+  document.getElementById('filterSearch').value = '';
+  document.getElementById('searchClearBtn').style.display = 'none';
+  // 收起更多筛选
+  const panel = document.getElementById('moreFilters');
+  const btn = document.getElementById('moreFilterBtn');
+  if(panel) panel.style.display = 'none';
+  if(btn){
+    const arrow = btn.querySelector('.filter-btn-arrow');
+    if(arrow) arrow.textContent = '▾';
+  }
+  // 重新渲染所有自定义下拉组件的显示值
+  document.querySelectorAll('.custom-select[data-native]').forEach(el=>{
+    renderCustomSelectOptions(el.id);
+  });
+  applyFilters();
+}
+
+/* ---------- 批量勾选 ---------- */
+function toggleSelectAll(event){
+  // 使用事件源获取被点击的复选框状态，避免两个全选框状态不同步
+  const source = event ? event.target : document.getElementById('selectAllHead');
+  const checked = source.checked;
+  // 同步两个全选复选框
+  const headCb = document.getElementById('selectAllHead');
+  const barCb = document.getElementById('selectAll');
+  if(headCb) headCb.checked = checked;
+  if(barCb) barCb.checked = checked;
+  // 设置所有行复选框
+  document.querySelectorAll('.run-checkbox').forEach(cb=>{ cb.checked = checked; });
+  updateSelectedCount();
+}
+function updateSelectedCount(){
+  const checkboxes = document.querySelectorAll('.run-checkbox');
+  const count = document.querySelectorAll('.run-checkbox:checked').length;
+  const bar = document.getElementById('batchBar');
+  document.getElementById('selectedCount').textContent = count;
+  if(bar) bar.style.display = count > 0 ? 'flex' : 'none';
+  // 同步全选框状态：全部选中则勾选，否则取消
+  const headCb = document.getElementById('selectAllHead');
+  const barCb = document.getElementById('selectAll');
+  const allChecked = checkboxes.length > 0 && count === checkboxes.length;
+  if(headCb) headCb.checked = allChecked;
+  if(barCb) barCb.checked = allChecked;
+  // 用户主动修改勾选时，更新保存的选中ID（避免刷新后恢复已取消的勾选）
+  if(typeof getSelectedRunIds === 'function'){
+    _preservedSelectedIds = getSelectedRunIds();
+  }
+}
+
+function getSelectedRunIds(){
+  return Array.from(document.querySelectorAll('.run-checkbox:checked')).map(cb=> parseInt(cb.value));
+}
+
+async function batchDelete(){
+  const ids = getSelectedRunIds();
+  if(ids.length === 0){ toast('请先选择要删除的记录', 'err'); return; }
+  if(!confirm(`确定要删除选中的 ${ids.length} 条执行记录吗？此操作不可恢复。`)) return;
+  try{
+    const res = await api('/api/runs/batch-delete', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ids})
+    });
+    toast(`已删除 ${res.deleted} 条记录`);
+    // 清空保存的选中ID，避免刷新后恢复已删除的记录
+    _preservedSelectedIds = [];
+    // 重置勾选状态
+    document.getElementById('selectAllHead').checked = false;
+    if(document.getElementById('selectAll')) document.getElementById('selectAll').checked = false;
+    // 刷新列表和统计
+    await loadRuns(true);
+  }catch(e){
+    toast(e.message || '删除失败', 'err');
+  }
+}
+
+async function batchExport(){
+  const ids = getSelectedRunIds();
+  // 如果没有选中，导出全部筛选后的记录
+  const exportIds = ids.length > 0 ? ids : runs.map(r=>r.id);
+  if(exportIds.length === 0){ toast('没有可导出的记录', 'err'); return; }
+  try{
+    const res = await fetch('/api/runs/export', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ids: exportIds})
+    });
+    if(!res.ok) throw new Error('导出失败');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // 从响应头获取文件名，支持 filename 和 filename*=UTF-8'' 两种格式
+    const disposition = res.headers.get('Content-Disposition') || '';
+    let downloadName = `执行报告_${new Date().toISOString().slice(0,10)}.pdf`;
+    const matchStar = disposition.match(/filename\*=UTF-8''([^;]+)/);
+    const matchPlain = disposition.match(/filename=([^;]+)/);
+    if(matchStar){
+      downloadName = decodeURIComponent(matchStar[1]);
+    }else if(matchPlain){
+      downloadName = decodeURIComponent(matchPlain[1].replace(/"/g, ''));
+    }
+    a.download = downloadName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    toast(ids.length > 0 ? `已导出选中的 ${ids.length} 条记录` : '已导出全部记录');
+  }catch(e){
+    toast(e.message || '导出失败', 'err');
+  }
+}
+
+function durationOf(r){
+  if(!r.start_time || !r.end_time) return '-';
+  const ms = new Date(r.end_time+'Z') - new Date(r.start_time+'Z');
+  return (ms/1000).toFixed(1) + 's';
+}
+
+async function openRun(id){
+  const r = await api(`/api/runs/${id}`);
+  const caseName = (cases.find(c=>c.id===r.test_case_id) || {}).name || ('#'+r.test_case_id);
+  const serverName = (servers.find(s=>s.id===r.server_id) || {}).name || ('#'+r.server_id);
+  const serverHost = (servers.find(s=>s.id===r.server_id) || {}).base_url || '';
+
+  const total = r.step_results.length;
+  const passed = r.step_results.filter(s=>s.status==='passed').length;
+  const failed = r.step_results.filter(s=>s.status==='failed').length;
+  const skipped = r.step_results.filter(s=>s.status==='skipped').length;
+
+  const steps = r.step_results.map(s=>`
+    <div class="tl-step">
+      <div class="tl-dot ${s.status}"></div>
+      <div class="tl-head">
+        <span class="tl-order">#${s.step_order}</span>
+        <span class="tl-action">${ACTION_LABEL[s.action] || s.action}</span>
+        ${pill(s.status)}
+        ${s.duration_ms!=null ? `<span class="faint">${s.duration_ms}ms</span>` : ''}
+      </div>
+      <div class="tl-body">${s.actual_result ? `<span class="mono">${escapeHtml(s.actual_result)}</span>` : ''}</div>
+      ${s.screenshot_path ? `<div class="tl-shot"><img src="/${s.screenshot_path}"></div>` : ''}
+    </div>`).join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    <h2 style="margin:0 0 4px 0;font-size:17px;">${caseName} <span class="dim" style="font-weight:400;font-size:13px;">#${r.id}</span></h2>
+    <div class="dim" style="font-size:12.5px;margin-bottom:4px;">测试环境：${serverName}${serverHost ? '（'+serverHost+'）' : ''}</div>
+    <div class="dim" style="font-size:12.5px;margin-bottom:12px;">执行引擎：Playwright · 浏览器：${(r.browser || 'chromium').charAt(0).toUpperCase() + (r.browser || 'chromium').slice(1)}</div>
+    <div style="margin-bottom:12px;">${pill(r.status)} <span class="faint" style="margin-left:8px;">${fmtTime(r.start_time)} → ${fmtTime(r.end_time)}</span></div>
+    <div style="display:flex;gap:16px;margin-bottom:16px;font-size:13px;">
+      <span>总步骤：<b>${total}</b></span>
+      <span style="color:var(--success)">成功：<b>${passed}</b></span>
+      <span style="color:var(--danger)">失败：<b>${failed}</b></span>
+      ${skipped ? `<span class="dim">跳过：<b>${skipped}</b></span>` : ''}
+    </div>
+    ${r.error_message ? `<div class="panel" style="background:rgba(217,72,61,0.08);border-color:#e8b5b0;margin-bottom:16px;"><div class="dim mono" style="white-space:pre-wrap;font-size:12px;">${escapeHtml(r.error_message)}</div></div>` : ''}
+    <div class="timeline">${steps || '<div class="dim">暂无步骤结果</div>'}</div>
+  `;
+  showModal();
+
+  if(r.status === 'running' || r.status === 'pending'){
+    setTimeout(()=>{ if(document.getElementById('runModal').classList.contains('show')) openRun(id); }, 2000);
+  }
+}
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+}
+
+/* ---------------- 弹窗 ---------------- */
+function showModal(){ document.getElementById('runModal').classList.add('show'); }
+function closeModal(){
+  const modal = document.getElementById('runModal');
+  modal.classList.remove('show');
+  // 移除小尺寸样式，避免影响其他弹窗
+  modal.querySelector('.modal').classList.remove('modal-sm');
+}
+document.getElementById('runModal').addEventListener('click', e=>{
+  if(e.target.id === 'runModal') closeModal();
+});
+
+/* ---------------- 初始化 ---------------- */
+async function init(){
+  await loadServers();
+  await loadCases();
+  await loadRuns(false);
+}
+
+// 页面加载：先检查登录状态
+async function bootstrap(){
+  initTheme();
+  const loggedIn = await checkLogin();
+  if(loggedIn){
+    await init();
+  }
+}
+bootstrap();
+
+// 登录输入框回车登录
+document.addEventListener('DOMContentLoaded', () => {
+  const u = document.getElementById('loginUsername');
+  const p = document.getElementById('loginPassword');
+  if(u) u.addEventListener('keydown', e => { if(e.key === 'Enter') p.focus(); });
+  if(p) p.addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+});
+
+// 定时刷新执行记录（执行任务页或执行报告页激活时）
+setInterval(() => {
+  if(!getToken()) return;
+  const executeActive = document.getElementById('view-execute')?.classList.contains('active');
+  const reportsActive = document.getElementById('view-reports')?.classList.contains('active');
+  if(executeActive) loadRuns(false);
+  else if(reportsActive) loadRuns(true);
+}, 5000);
+</script>
+</body>
+</html>
