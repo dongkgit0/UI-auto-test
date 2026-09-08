@@ -67,25 +67,71 @@ code, .mono, input, select, textarea{
 .login-page{
   position:fixed;inset:0;z-index:9999;
   display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,#e8f4f3 0%,#f4f6f8 50%,#eef1f4 100%);
+  overflow:hidden;
+  /* 现代无衬线字体栈：Inter 优先，中文系统字体 fallback */
+  font-family:'Inter','IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  /* 深青渐变基底：边缘深、中心微亮，形成科技感空间层次 */
+  background:
+    radial-gradient(1100px 750px at 50% 45%, rgba(56,189,176,0.10) 0%, transparent 60%),
+    linear-gradient(160deg, #0c2231 0%, #0e2b3a 48%, #091a26 100%);
+}
+/* 柔和光晕：从页面边缘向中心扩散（左上青绿 + 右下绿色），缓慢漂移 */
+.login-page::before,.login-page::after{
+  content:'';position:absolute;z-index:0;pointer-events:none;
+  filter:blur(28px);will-change:transform;
+}
+.login-page::before{
+  left:-14%;top:-22%;width:62%;height:72%;
+  background:
+    linear-gradient(120deg, transparent 42%, rgba(148,233,213,0.07) 48%, rgba(148,233,213,0.10) 52%, transparent 58%),
+    radial-gradient(closest-side, rgba(45,212,191,0.22) 0%, rgba(45,212,191,0.10) 45%, transparent 72%);
+  animation:login-drift-a 26s ease-in-out infinite alternate;
+}
+.login-page::after{
+  right:-13%;bottom:-20%;width:58%;height:68%;
+  background:
+    linear-gradient(300deg, transparent 40%, rgba(110,231,183,0.06) 46%, rgba(110,231,183,0.09) 52%, transparent 60%),
+    radial-gradient(closest-side, rgba(52,211,153,0.20) 0%, rgba(52,211,153,0.09) 45%, transparent 72%);
+  animation:login-drift-b 32s ease-in-out infinite alternate;
+}
+@keyframes login-drift-a{
+  0%{transform:translate3d(0,0,0) scale(1);}
+  50%{transform:translate3d(5%,4%,0) scale(1.10);}
+  100%{transform:translate3d(-4%,7%,0) scale(0.96);}
+}
+@keyframes login-drift-b{
+  0%{transform:translate3d(0,0,0) scale(1);}
+  50%{transform:translate3d(-6%,-4%,0) scale(0.94);}
+  100%{transform:translate3d(5%,-7%,0) scale(1.08);}
+}
+@media (prefers-reduced-motion:reduce){
+  .login-page::before,.login-page::after{animation:none;}
 }
 .login-card{
-  width:380px;background:var(--surface);border-radius:14px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.06);
+  position:relative;z-index:1;
+  width:380px;
+  /* 玻璃拟态：半透明白 + 背景模糊 + 高光边框 */
+  background:rgba(255,255,255,0.74);
+  backdrop-filter:blur(22px) saturate(150%);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+  border:1px solid rgba(255,255,255,0.6);
+  border-radius:16px;
+  box-shadow:0 24px 60px rgba(4,18,26,0.38),0 6px 18px rgba(4,18,26,0.18),inset 0 1px 0 rgba(255,255,255,0.65);
   padding:36px 32px 28px 32px;
 }
 .login-brand{
   display:flex;align-items:center;gap:10px;margin-bottom:6px;
 }
 .login-brand-dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
-.login-brand-name{font-size:18px;font-weight:700;letter-spacing:0.3px;}
-.login-brand-sub{color:var(--text-faint);font-size:12.5px;margin-bottom:24px;padding-left:21px;}
+.login-brand-name{font-size:16px;font-weight:600;letter-spacing:0.3px;color:#1f2937;}
+.login-brand-sub{color:#4b5563;font-size:13px;font-weight:500;margin-bottom:24px;padding-left:21px;}
 .login-field{margin-bottom:16px;}
-.login-field label{display:block;font-size:13px;font-weight:500;color:var(--text-dim);margin-bottom:6px;}
+.login-field label{display:block;font-size:13px;font-weight:500;color:#374151;margin-bottom:6px;}
 .login-field input{
   width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-control);
-  font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s;
+  font-size:14px;background:var(--surface);color:#1f2937;outline:none;transition:border-color 0.15s,box-shadow 0.15s;
 }
+.login-field input::placeholder{color:#9ca3af;}
 .login-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(42,163,156,0.15);}
 .login-btn{
   width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-control);
@@ -99,7 +145,7 @@ code, .mono, input, select, textarea{
 }
 .login-footer{
   margin-top:20px;padding-top:16px;border-top:1px solid var(--border);
-  text-align:center;color:var(--text-faint);font-size:12px;
+  text-align:center;color:#6b7280;font-size:12px;
 }
 
 /* ---------- Sidebar ---------- */
@@ -1258,9 +1304,12 @@ html[data-theme="dark"] .empty-title{color:var(--text);}
 html[data-theme="dark"] .empty p{color:var(--text-dim);}
 html[data-theme="dark"] .running-board{background:var(--surface);border-color:var(--border);}
 html[data-theme="dark"] .running-item{background:var(--surface-2);}
-html[data-theme="dark"] .login-page{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);}
-html[data-theme="dark"] .login-card{background:var(--surface);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
-html[data-theme="dark"] .login-brand-sub{color:var(--text-faint);}
+html[data-theme="dark"] .login-page{background:radial-gradient(1100px 750px at 50% 45%, rgba(56,189,176,0.08) 0%, transparent 60%),linear-gradient(160deg,#0a1826 0%,#0c2230 48%,#081420 100%);}
+html[data-theme="dark"] .login-page::before{background:linear-gradient(120deg, transparent 42%, rgba(148,233,213,0.05) 48%, rgba(148,233,213,0.08) 52%, transparent 58%),radial-gradient(closest-side, rgba(45,212,191,0.16) 0%, rgba(45,212,191,0.07) 45%, transparent 72%);}
+html[data-theme="dark"] .login-page::after{background:linear-gradient(300deg, transparent 40%, rgba(110,231,183,0.04) 46%, rgba(110,231,183,0.07) 52%, transparent 60%),radial-gradient(closest-side, rgba(52,211,153,0.14) 0%, rgba(52,211,153,0.06) 45%, transparent 72%);}
+html[data-theme="dark"] .login-card{background:rgba(15,30,46,0.66);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);border:1px solid rgba(148,163,184,0.16);box-shadow:0 24px 60px rgba(0,0,0,0.5),inset 0 1px 0 rgba(148,163,184,0.12);}
+html[data-theme="dark"] .login-brand-name{color:#e2e8f0;}
+html[data-theme="dark"] .login-brand-sub{color:#94a3b8;}
 html[data-theme="dark"] .login-field label{color:var(--text-dim);}
 html[data-theme="dark"] .login-field input{background:var(--surface);border-color:var(--border);color:var(--text);}
 html[data-theme="dark"] .login-field input::placeholder{color:var(--text-faint);}
